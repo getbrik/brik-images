@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # install-brik.sh - Install Brik prerequisites into a Docker image.
 #
-# Installs: yq, jq, git (if missing).
+# Installs: yq, jq, git, docker-cli (if missing).
 # Multi-arch aware (amd64/arm64).
 #
 # The brik runtime itself is NOT included -- it is cloned at CI time
@@ -154,6 +154,48 @@ install_jq() {
 }
 
 # ---------------------------------------------------------------------------
+# Install Docker CLI (for container build/push in package stage)
+# ---------------------------------------------------------------------------
+
+install_docker_cli() {
+    if command -v docker >/dev/null 2>&1; then
+        log "docker already installed"
+        return 0
+    fi
+
+    local mgr
+    mgr="$(detect_pkg_manager)"
+    case "$mgr" in
+        apk)
+            apk add --no-cache docker-cli
+            ;;
+        apt-get)
+            apt-get update -qq \
+                && apt-get install -y -qq --no-install-recommends \
+                    ca-certificates curl gnupg \
+                && install -m 0755 -d /etc/apt/keyrings \
+                && curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
+                && chmod a+r /etc/apt/keyrings/docker.gpg \
+                && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list \
+                && apt-get update -qq \
+                && apt-get install -y -qq --no-install-recommends docker-ce-cli \
+                && rm -rf /var/lib/apt/lists/*
+            ;;
+        yum)
+            yum install -y docker-cli && yum clean all
+            ;;
+        dnf)
+            dnf install -y docker-cli && dnf clean all
+            ;;
+        *)
+            log "ERROR: cannot install docker-cli - no package manager found"
+            return 1
+            ;;
+    esac
+    log "docker-cli installed"
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -166,6 +208,7 @@ main() {
     install_git
     install_yq
     install_jq
+    install_docker_cli
 
     log "all Brik prerequisites installed successfully"
 }
