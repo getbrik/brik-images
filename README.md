@@ -30,6 +30,25 @@ Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-sp
 
 All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
+## Security
+
+- Images are scanned with [Grype](https://github.com/anchore/grype) on every build (blocks on **critical** CVEs with available fixes)
+- Scan results are uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full visibility
+- SBOMs are generated with [Syft](https://github.com/anchore/syft) in CycloneDX format
+- Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC)
+- Weekly rebuilds pick up base image security patches
+- [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates
+
+### Security policy
+
+These images bundle the latest available versions of their respective base images and tools (yq, jq, git). Some upstream base images (e.g. `node:22-slim`, `python:3.13-slim`) may contain known vulnerabilities that have not yet been patched by their maintainers.
+
+**What we control:** yq, jq, and git versions are pinned to the latest releases and updated regularly. The build fails on any **critical** CVE with an available fix.
+
+**What we don't control:** CVEs in the upstream base images (Alpine, Debian, Ubuntu). These are resolved when the upstream maintainers publish updated images. Weekly rebuilds automatically pick up new patches.
+
+Check the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for the current scan results of every image.
+
 ## Tag Convention
 
 Each image is published with multiple tags:
@@ -53,6 +72,16 @@ Every image contains:
 Stack images additionally include their respective toolchain (node/npm, python/pip, java/maven, etc.).
 
 **Note:** The brik runtime is NOT pre-installed. It is cloned at CI time by the shared library's `before_script`. This decouples image releases from brik releases.
+
+## Roadmap: Brik Runtime in Images
+
+Currently, the brik runtime is cloned at CI time by the shared library's `before_script`. This keeps image releases decoupled from brik development, which is the right trade-off during active development.
+
+Once brik reaches a stable release cadence, the runtime will be pre-installed in the images. This will unlock:
+
+- **Zero-config local usage** -- `docker run ghcr.io/getbrik/brik-runner-node:22 brik run stage build` with no setup, no clone, no CI platform required.
+- **Fully offline pipelines** -- images become self-contained, no network dependency at runtime.
+- **Freemium / Enterprise tiers** -- community images ship with brik core; enterprise images could include additional modules, caching layers, or premium integrations.
 
 ## Usage
 
@@ -141,35 +170,6 @@ The build matrix is defined in `versions.json`. To add a new stack version:
 1. Edit `versions.json`
 2. Run `./scripts/generate-bake.sh`
 3. Commit and push -- CI handles the rest
-
-## Roadmap: Brik Runtime in Images
-
-Currently, the brik runtime is cloned at CI time by the shared library's `before_script`. This keeps image releases decoupled from brik development, which is the right trade-off during active development.
-
-Once brik reaches a stable release cadence, the runtime will be pre-installed in the images. This will unlock:
-
-- **Zero-config local usage** -- `docker run ghcr.io/getbrik/brik-runner-node:22 brik run stage build` with no setup, no clone, no CI platform required.
-- **Fully offline pipelines** -- images become self-contained, no network dependency at runtime.
-- **Freemium / Enterprise tiers** -- community images ship with brik core; enterprise images could include additional modules, caching layers, or premium integrations.
-
-## Security
-
-- Images are scanned with [Grype](https://github.com/anchore/grype) on every build (blocks on **critical** CVEs with available fixes)
-- Scan results are uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full visibility
-- SBOMs are generated with [Syft](https://github.com/anchore/syft) in CycloneDX format
-- Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC)
-- Weekly rebuilds pick up base image security patches
-- [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates
-
-### Security policy
-
-These images bundle the latest available versions of their respective base images and tools (yq, jq, git). Some upstream base images (e.g. `node:22-slim`, `python:3.13-slim`) may contain known vulnerabilities that have not yet been patched by their maintainers.
-
-**What we control:** yq, jq, and git versions are pinned to the latest releases and updated regularly. The build fails on any **critical** CVE with an available fix.
-
-**What we don't control:** CVEs in the upstream base images (Alpine, Debian, Ubuntu). These are resolved when the upstream maintainers publish updated images. Weekly rebuilds automatically pick up new patches.
-
-Check the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for the current scan results of every image.
 
 ## License
 

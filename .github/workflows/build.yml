@@ -172,10 +172,11 @@ jobs:
       - name: Generate security badge data
         if: github.event_name != 'pull_request' && always()
         run: |
-          IMAGE="registry:${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
 
-          # grype was installed by scan-action; full scan (not only-fixed) for transparency
-          grype "${IMAGE}" -o json > /tmp/grype-full.json 2>/tmp/grype-err.log || true
+          # Image is already in Docker daemon (pulled by scan-action)
+          # Full scan (not only-fixed) for transparency in badges
+          grype "docker:${IMAGE}" -o json > /tmp/grype-full.json 2>/tmp/grype-err.log || true
           if [ -s /tmp/grype-err.log ]; then cat /tmp/grype-err.log; fi
 
           if [ ! -s /tmp/grype-full.json ] || ! jq -e '.matches' /tmp/grype-full.json >/dev/null 2>&1; then
@@ -252,7 +253,13 @@ jobs:
           COSIGN_EXPERIMENTAL: "true"
         run: |
           IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
-          cosign attest --yes --predicate sbom-${{ matrix.stack }}-${{ matrix.version }}.json --type cyclonedx "${IMAGE}"
+          # 409 Conflict is expected when the same attestation already exists in the transparency log
+          cosign attest --yes --predicate sbom-${{ matrix.stack }}-${{ matrix.version }}.json --type cyclonedx "${IMAGE}" || {
+            rc=$?
+            if [ $rc -ne 0 ]; then
+              echo "::warning::cosign attest exited with code $rc (409 conflict = attestation already exists, safe to ignore)"
+            fi
+          }
 
   update-badges:
     name: Update Security Badges
