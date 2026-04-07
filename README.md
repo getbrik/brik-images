@@ -7,6 +7,8 @@
   <b>Write once. Run everywhere.</b>
 </p>
 
+[![Build](https://github.com/getbrik/brik-images/actions/workflows/build.yml/badge.svg)](https://github.com/getbrik/brik-images/actions/workflows/build.yml)
+
 Official Docker images for [Brik](https://github.com/getbrik/brik) CI/CD runners.
 
 Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-specific tools. Eliminates the ~30-40s bootstrap overhead from every CI job.
@@ -39,8 +41,8 @@ ghcr.io/getbrik/brik-runner-node:sha-a1b2c3d      # immutable git SHA
 Every image contains:
 
 - **bash** (5.x)
-- **yq** (v4.44.1) - YAML processor
-- **jq** (1.7.1) - JSON processor
+- **yq** (v4.52.5) - YAML processor
+- **jq** (1.8.1) - JSON processor
 - **git** - version control
 - **curl** - HTTP client
 
@@ -148,11 +150,22 @@ Once brik reaches a stable release cadence, the runtime will be pre-installed in
 
 ## Security
 
-- Images are scanned with [Grype](https://github.com/anchore/grype) on every build
+- Images are scanned with [Grype](https://github.com/anchore/grype) on every build (blocks on **critical** CVEs with available fixes)
+- Scan results are uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full visibility
 - SBOMs are generated with [Syft](https://github.com/anchore/syft) in CycloneDX format
 - Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC)
 - Weekly rebuilds pick up base image security patches
 - [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates
+
+### Security policy
+
+These images bundle the latest available versions of their respective base images and tools (yq, jq, git). Some upstream base images (e.g. `node:22-slim`, `python:3.13-slim`) may contain known vulnerabilities that have not yet been patched by their maintainers.
+
+**What we control:** yq, jq, and git versions are pinned to the latest releases and updated regularly. The build fails on any **critical** CVE with an available fix.
+
+**What we don't control:** CVEs in the upstream base images (Alpine, Debian, Ubuntu). These are resolved when the upstream maintainers publish updated images. Weekly rebuilds automatically pick up new patches.
+
+Check the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for the current scan results of every image.
 
 ## License
 

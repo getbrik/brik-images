@@ -1,8 +1,8 @@
 {
   "registry": "ghcr.io/getbrik",
   "tools": {
-    "yq": "v4.44.1",
-    "jq": "1.7.1"
+    "yq": "v4.52.5",
+    "jq": "1.8.1"
   },
   "stacks": {
     "base": {

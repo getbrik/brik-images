@@ -2,8 +2,8 @@
 ARG VERSION=8.0
 FROM mcr.microsoft.com/dotnet/sdk:${VERSION}
 
-ARG YQ_VERSION=v4.44.1
-ARG JQ_VERSION=1.7.1
+ARG YQ_VERSION=v4.52.5
+ARG JQ_VERSION=1.8.1
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-dotnet"

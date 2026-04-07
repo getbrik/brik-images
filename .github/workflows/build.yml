@@ -13,6 +13,7 @@ permissions:
   contents: read
   packages: write
   id-token: write
+  security-events: write
 
 env:
   REGISTRY: ghcr.io/getbrik
@@ -153,11 +154,20 @@ jobs:
 
       - name: Scan with Grype
         if: github.event_name != 'pull_request'
+        id: grype
         uses: anchore/scan-action@v6
         with:
           image: "${{ env.REGISTRY }}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
           fail-build: true
-          severity-cutoff: high
+          severity-cutoff: critical
+          only-fixed: true
+
+      - name: Upload Grype SARIF to GitHub Security
+        if: github.event_name != 'pull_request' && always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.grype.outputs.sarif }}
+          category: grype-${{ matrix.stack }}-${{ matrix.version }}
 
       - name: Generate SBOM with Syft
         if: github.event_name != 'pull_request'

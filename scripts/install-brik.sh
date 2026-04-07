@@ -13,8 +13,8 @@
 
 set -euo pipefail
 
-YQ_VERSION="${YQ_VERSION:-v4.44.1}"
-JQ_VERSION="${JQ_VERSION:-1.7.1}"
+YQ_VERSION="${YQ_VERSION:-v4.52.5}"
+JQ_VERSION="${JQ_VERSION:-1.8.1}"
 
 # ---------------------------------------------------------------------------
 # Helpers
