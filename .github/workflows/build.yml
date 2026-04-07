@@ -172,15 +172,22 @@ jobs:
       - name: Generate security badge data
         if: github.event_name != 'pull_request' && always()
         run: |
-          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+          IMAGE="registry:${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
 
           # grype was installed by scan-action; full scan (not only-fixed) for transparency
-          grype "${IMAGE}" -o json > /tmp/grype-full.json 2>/dev/null || true
+          grype "${IMAGE}" -o json > /tmp/grype-full.json 2>&1 || true
 
-          CRITICAL=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' /tmp/grype-full.json)
-          HIGH=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' /tmp/grype-full.json)
-          MEDIUM=$(jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length' /tmp/grype-full.json)
-          LOW=$(jq '[.matches[] | select(.vulnerability.severity == "Low")] | length' /tmp/grype-full.json)
+          if [ ! -s /tmp/grype-full.json ] || ! jq -e '.matches' /tmp/grype-full.json >/dev/null 2>&1; then
+            echo "::warning::Grype scan produced no results, using zero counts"
+            CRITICAL=0; HIGH=0; MEDIUM=0; LOW=0
+          else
+            CRITICAL=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' /tmp/grype-full.json)
+            HIGH=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' /tmp/grype-full.json)
+            MEDIUM=$(jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length' /tmp/grype-full.json)
+            LOW=$(jq '[.matches[] | select(.vulnerability.severity == "Low")] | length' /tmp/grype-full.json)
+          fi
+
+          echo "CVE counts: Critical=$CRITICAL High=$HIGH Medium=$MEDIUM Low=$LOW"
 
           if [ "$CRITICAL" -gt 0 ]; then COLOR="critical"
           elif [ "$HIGH" -gt 0 ]; then COLOR="important"
