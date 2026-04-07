@@ -15,12 +15,12 @@ Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-sp
 
 | Image | Base | Versions | Pull command |
 |-------|------|----------|--------------|
-| `brik-runner-base` | Alpine 3.21 | `latest`, `3.21` | `docker pull ghcr.io/getbrik/brik-runner-base` |
-| `brik-runner-node` | node:slim | `20`, `22` | `docker pull ghcr.io/getbrik/brik-runner-node:22` |
-| `brik-runner-python` | python:slim | `3.11`, `3.12` | `docker pull ghcr.io/getbrik/brik-runner-python:3.12` |
-| `brik-runner-java` | eclipse-temurin:jdk-jammy | `17`, `21` | `docker pull ghcr.io/getbrik/brik-runner-java:21` |
+| `brik-runner-base` | Alpine 3.23 | `latest`, `3.23` | `docker pull ghcr.io/getbrik/brik-runner-base` |
+| `brik-runner-node` | node:slim | `22`, `24` | `docker pull ghcr.io/getbrik/brik-runner-node:24` |
+| `brik-runner-python` | python:slim | `3.13`, `3.14` | `docker pull ghcr.io/getbrik/brik-runner-python:3.14` |
+| `brik-runner-java` | eclipse-temurin:jdk-jammy | `21`, `25` | `docker pull ghcr.io/getbrik/brik-runner-java:25` |
 | `brik-runner-rust` | rust:slim-bookworm | `1` | `docker pull ghcr.io/getbrik/brik-runner-rust:1` |
-| `brik-runner-dotnet` | mcr.microsoft.com/dotnet/sdk | `8.0`, `9.0` | `docker pull ghcr.io/getbrik/brik-runner-dotnet:8.0` |
+| `brik-runner-dotnet` | mcr.microsoft.com/dotnet/sdk | `9.0`, `10.0` | `docker pull ghcr.io/getbrik/brik-runner-dotnet:10.0` |
 
 All images are multi-arch: `linux/amd64` and `linux/arm64`.
 

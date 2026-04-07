@@ -1,5 +1,5 @@
 # brik-runner-base - Alpine with Brik prerequisites
-ARG VERSION=3.21
+ARG VERSION=3.23
 FROM alpine:${VERSION}
 
 ARG YQ_VERSION=v4.44.1
