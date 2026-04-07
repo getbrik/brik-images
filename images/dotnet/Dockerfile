@@ -17,5 +17,8 @@ ENV YQ_VERSION=${YQ_VERSION} \
 COPY scripts/install-brik.sh /tmp/install-brik.sh
 RUN chmod +x /tmp/install-brik.sh && /tmp/install-brik.sh && rm /tmp/install-brik.sh
 
+# Mark as brik-runner image (detected by setup.sh to skip prerequisite install)
+RUN echo "brik-runner" > /.brik-runner
+
 # Verify prerequisites + stack
 RUN yq --version && jq --version && dotnet --version
