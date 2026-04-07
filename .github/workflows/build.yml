@@ -174,6 +174,9 @@ jobs:
         run: |
           IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
 
+          # scan-action installs grype in hostedtoolcache but does not persist PATH
+          export PATH="/opt/hostedtoolcache/grype/$(ls /opt/hostedtoolcache/grype/ 2>/dev/null | head -1)/x64:${PATH}"
+
           # Image is already in Docker daemon (pulled by scan-action)
           # Full scan (not only-fixed) for transparency in badges
           grype "docker:${IMAGE}" -o json > /tmp/grype-full.json 2>/tmp/grype-err.log || true
