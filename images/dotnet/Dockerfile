@@ -1,5 +1,5 @@
 # brik-runner-dotnet - .NET SDK with Brik prerequisites
-ARG VERSION=8.0
+ARG VERSION=8.0@sha256:a9330090b730c2abde8f3f43b3d1e24e4b8cba028de7bab1a7fdcd50cb7a3b7e
 FROM mcr.microsoft.com/dotnet/sdk:${VERSION}
 
 ARG YQ_VERSION=v4.52.5
