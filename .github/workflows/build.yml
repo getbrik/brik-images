@@ -23,23 +23,23 @@ jobs:
     name: Lint Dockerfiles
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: actions/checkout@v6
+      - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: images/base/Dockerfile
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: images/node/Dockerfile
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: images/python/Dockerfile
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: images/java/Dockerfile
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: images/rust/Dockerfile
-      - uses: hadolint/hadolint-action@v3.1.0
+      - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: images/dotnet/Dockerfile
 
@@ -49,7 +49,7 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - id: matrix
         run: |
           matrix=$(jq -c '{
@@ -74,17 +74,17 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to GHCR
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -122,7 +122,7 @@ jobs:
 
       - name: Build and push image
         if: github.event_name != 'pull_request'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: images/${{ matrix.stack }}/Dockerfile
@@ -138,7 +138,7 @@ jobs:
 
       - name: Build image (PR - amd64 only)
         if: github.event_name == 'pull_request'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: images/${{ matrix.stack }}/Dockerfile
@@ -155,7 +155,7 @@ jobs:
       - name: Scan with Grype
         if: github.event_name != 'pull_request'
         id: grype
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@v7
         with:
           image: "${{ env.REGISTRY }}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
           fail-build: true
@@ -164,10 +164,42 @@ jobs:
 
       - name: Upload Grype SARIF to GitHub Security
         if: github.event_name != 'pull_request' && always()
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: ${{ steps.grype.outputs.sarif }}
           category: grype-${{ matrix.stack }}-${{ matrix.version }}
+
+      - name: Generate security badge data
+        if: github.event_name != 'pull_request' && always()
+        run: |
+          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+
+          # grype was installed by scan-action; full scan (not only-fixed) for transparency
+          grype "${IMAGE}" -o json > /tmp/grype-full.json 2>/dev/null || true
+
+          CRITICAL=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' /tmp/grype-full.json)
+          HIGH=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' /tmp/grype-full.json)
+          MEDIUM=$(jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length' /tmp/grype-full.json)
+          LOW=$(jq '[.matches[] | select(.vulnerability.severity == "Low")] | length' /tmp/grype-full.json)
+
+          if [ "$CRITICAL" -gt 0 ]; then COLOR="critical"
+          elif [ "$HIGH" -gt 0 ]; then COLOR="important"
+          elif [ "$MEDIUM" -gt 0 ]; then COLOR="yellow"
+          else COLOR="brightgreen"; fi
+
+          mkdir -p badges
+          jq -n --arg label "CVEs" \
+                --arg message "${CRITICAL}C | ${HIGH}H | ${MEDIUM}M | ${LOW}L" \
+                --arg color "$COLOR" \
+                '{schemaVersion:1, label:$label, message:$message, color:$color}' \
+            > "badges/${{ matrix.stack }}-${{ matrix.version }}.json"
+
+      - name: Upload badge data
+        if: github.event_name != 'pull_request' && always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: badge-${{ matrix.stack }}-${{ matrix.version }}
+          path: badges/
 
       - name: Generate SBOM with Syft
         if: github.event_name != 'pull_request'
@@ -179,7 +211,7 @@ jobs:
 
       - name: Upload SBOM
         if: github.event_name != 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom-${{ matrix.stack }}-${{ matrix.version }}
           path: sbom-${{ matrix.stack }}-${{ matrix.version }}.json
@@ -196,7 +228,7 @@ jobs:
 
       - name: Install cosign
         if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@v3
+        uses: sigstore/cosign-installer@v4
 
       - name: Sign image
         if: github.event_name != 'pull_request'
@@ -213,3 +245,32 @@ jobs:
         run: |
           IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
           cosign attest --yes --predicate sbom-${{ matrix.stack }}-${{ matrix.version }}.json --type cyclonedx "${IMAGE}"
+
+  update-badges:
+    name: Update Security Badges
+    needs: [build]
+    if: github.event_name != 'pull_request' && always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Download all badge artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: badge-*
+          path: docs/badges/
+          merge-multiple: true
+
+      - name: Commit badge updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/badges/
+          if git diff --staged --quiet; then
+            echo "No badge changes to commit"
+          else
+            git commit -m "ci: update security badges [skip ci]"
+            git push
+          fi

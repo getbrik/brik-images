@@ -15,14 +15,18 @@ Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-sp
 
 ## Available Images
 
-| Image | Base | Versions | Pull command |
-|-------|------|----------|--------------|
-| `brik-runner-base` | Alpine 3.23 | `latest`, `3.23` | `docker pull ghcr.io/getbrik/brik-runner-base` |
-| `brik-runner-node` | node:slim | `22`, `24` | `docker pull ghcr.io/getbrik/brik-runner-node:24` |
-| `brik-runner-python` | python:slim | `3.13`, `3.14` | `docker pull ghcr.io/getbrik/brik-runner-python:3.14` |
-| `brik-runner-java` | eclipse-temurin:jdk-jammy | `21`, `25` | `docker pull ghcr.io/getbrik/brik-runner-java:25` |
-| `brik-runner-rust` | rust:slim-bookworm | `1` | `docker pull ghcr.io/getbrik/brik-runner-rust:1` |
-| `brik-runner-dotnet` | mcr.microsoft.com/dotnet/sdk | `9.0`, `10.0` | `docker pull ghcr.io/getbrik/brik-runner-dotnet:10.0` |
+| Image | Version | Security | Pull command |
+|-------|---------|----------|--------------|
+| `brik-runner-base` | `3.23` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/base-3.23.json) | `docker pull ghcr.io/getbrik/brik-runner-base` |
+| `brik-runner-node` | `22` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/node-22.json) | `docker pull ghcr.io/getbrik/brik-runner-node:22` |
+| `brik-runner-node` | `24` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/node-24.json) | `docker pull ghcr.io/getbrik/brik-runner-node:24` |
+| `brik-runner-python` | `3.13` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/python-3.13.json) | `docker pull ghcr.io/getbrik/brik-runner-python:3.13` |
+| `brik-runner-python` | `3.14` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/python-3.14.json) | `docker pull ghcr.io/getbrik/brik-runner-python:3.14` |
+| `brik-runner-java` | `21` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/java-21.json) | `docker pull ghcr.io/getbrik/brik-runner-java:21` |
+| `brik-runner-java` | `25` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/java-25.json) | `docker pull ghcr.io/getbrik/brik-runner-java:25` |
+| `brik-runner-rust` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/rust-1.json) | `docker pull ghcr.io/getbrik/brik-runner-rust:1` |
+| `brik-runner-dotnet` | `9.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-9.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:9.0` |
+| `brik-runner-dotnet` | `10.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-10.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:10.0` |
 
 All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
