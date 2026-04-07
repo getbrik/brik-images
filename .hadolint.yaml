@@ -1,0 +1,8 @@
+ignored:
+  - DL3008  # Pin versions in apt-get install
+  - DL3018  # Pin versions in apk add
+  - DL3013  # Pin versions in pip install
+trustedRegistries:
+  - docker.io
+  - ghcr.io
+  - mcr.microsoft.com

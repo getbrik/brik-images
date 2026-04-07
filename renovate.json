@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base", ":pinDockerDigests"],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "automerge": true,
+      "platformAutomerge": true,
+      "matchUpdateTypes": ["digest"]
+    }
+  ]
+}

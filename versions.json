@@ -1,0 +1,40 @@
+{
+  "registry": "ghcr.io/getbrik",
+  "tools": {
+    "yq": "v4.44.1",
+    "jq": "1.7.1"
+  },
+  "stacks": {
+    "base": {
+      "versions": ["3.21"],
+      "image_template": "alpine:${VERSION}",
+      "verify_cmd": "bash --version"
+    },
+    "node": {
+      "versions": ["20", "22"],
+      "image_template": "node:${VERSION}-slim",
+      "verify_cmd": "node --version && npm --version"
+    },
+    "python": {
+      "versions": ["3.11", "3.12"],
+      "image_template": "python:${VERSION}-slim",
+      "verify_cmd": "python3 --version && pip --version"
+    },
+    "java": {
+      "versions": ["17", "21"],
+      "image_template": "eclipse-temurin:${VERSION}-jdk-jammy",
+      "extra_packages": ["maven"],
+      "verify_cmd": "java --version && mvn --version"
+    },
+    "rust": {
+      "versions": ["1"],
+      "image_template": "rust:${VERSION}-slim-bookworm",
+      "verify_cmd": "rustc --version && cargo --version"
+    },
+    "dotnet": {
+      "versions": ["8.0", "9.0"],
+      "image_template": "mcr.microsoft.com/dotnet/sdk:${VERSION}",
+      "verify_cmd": "dotnet --version"
+    }
+  }
+}
