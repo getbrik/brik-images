@@ -20,8 +20,6 @@ RUN chmod +x /tmp/install-brik.sh && /tmp/install-brik.sh && rm /tmp/install-bri
 # Mark as brik-runner image (detected by setup.sh to skip prerequisite install)
 RUN echo "brik-runner" > /.brik-runner
 
-# Install clippy and rustfmt for quality checks
-RUN rustup component add clippy rustfmt
-
-# Verify prerequisites + stack
-RUN yq --version && jq --version && rustc --version && cargo --version
+# Install clippy and rustfmt for quality checks, then verify prerequisites + stack
+RUN rustup component add clippy rustfmt \
+    && yq --version && jq --version && rustc --version && cargo --version
