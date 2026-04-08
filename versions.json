@@ -4,6 +4,19 @@
     "yq": "v4.52.5",
     "jq": "1.8.1"
   },
+  "security_tools": {
+    "semgrep": "1.116.0",
+    "osv_scanner": "2.0.1",
+    "grype": "0.92.0",
+    "syft": "1.22.0",
+    "checkov": "3.2.400",
+    "hadolint": "2.12.0",
+    "license_finder": "7.2.1",
+    "scancode_toolkit": "32.4.0",
+    "gitleaks": "8.24.0",
+    "trufflehog": "3.88.26",
+    "dockle": "0.4.15"
+  },
   "stacks": {
     "base": {
       "versions": ["3.23"],
@@ -35,6 +48,16 @@
       "versions": ["9.0", "10.0"],
       "image_template": "mcr.microsoft.com/dotnet/sdk:${VERSION}",
       "verify_cmd": "dotnet --version"
+    },
+    "quality": {
+      "versions": ["1"],
+      "image_template": "alpine:3.23",
+      "verify_cmd": "semgrep --version && osv-scanner --version && grype version && syft version && checkov --version && hadolint --version && license_finder version && scancode --version"
+    },
+    "security": {
+      "versions": ["1"],
+      "image_template": "alpine:3.23",
+      "verify_cmd": "gitleaks version && trufflehog --version && grype version && syft version && osv-scanner --version && dockle --version"
     }
   }
 }
