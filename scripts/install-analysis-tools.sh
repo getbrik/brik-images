@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
-# install-quality-tools.sh - Install Python/Ruby quality tools into a Docker image.
+# install-analysis-tools.sh - Install Python/Ruby analysis tools into a Docker image.
 #
 # Installs: semgrep, checkov, scancode-toolkit, license_finder
-# Used in the builder stage of the quality image multi-stage build.
-#
-# Note: Go binary tools (grype, syft, osv-scanner, hadolint) have been moved
-# to install-quality-lite-tools.sh for the quality-lite image.
+# Used in the builder stage of the analysis image multi-stage build.
 
 set -euo pipefail
 
@@ -15,7 +12,7 @@ CHECKOV_VERSION="${CHECKOV_VERSION:-3.2.517}"
 LICENSE_FINDER_VERSION="${LICENSE_FINDER_VERSION:-7.2.1}"
 SCANCODE_VERSION="${SCANCODE_VERSION:-32.5.0}"
 
-log() { printf '[install-quality-tools] %s\n' "$*"; }
+log() { printf '[install-analysis-tools] %s\n' "$*"; }
 
 detect_arch() {
     local arch
@@ -104,13 +101,13 @@ install_ruby_tools() {
 # ---------------------------------------------------------------------------
 
 main() {
-    log "starting quality tools installation"
+    log "starting analysis tools installation"
     log "  ARCH=${ARCH}"
 
     install_python_tools
     install_ruby_tools
 
-    log "all quality tools installed successfully"
+    log "all analysis tools installed successfully"
 }
 
 main "$@"

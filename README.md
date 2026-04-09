@@ -27,9 +27,8 @@ Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-sp
 | `brik-runner-rust` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/rust-1.json) | `docker pull ghcr.io/getbrik/brik-runner-rust:1` |
 | `brik-runner-dotnet` | `9.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-9.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:9.0` |
 | `brik-runner-dotnet` | `10.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-10.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:10.0` |
-| `brik-runner-quality-lite` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/quality-lite-1.json) | `docker pull ghcr.io/getbrik/brik-runner-quality-lite` |
-| `brik-runner-quality` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/quality-1.json) | `docker pull ghcr.io/getbrik/brik-runner-quality` |
-| `brik-runner-security` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/security-1.json) | `docker pull ghcr.io/getbrik/brik-runner-security` |
+| `brik-runner-analysis` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/analysis-1.json) | `docker pull ghcr.io/getbrik/brik-runner-analysis` |
+| `brik-runner-scanner` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/scanner-1.json) | `docker pull ghcr.io/getbrik/brik-runner-scanner` |
 
 All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
@@ -77,29 +76,16 @@ Every image contains:
 
 Stack images additionally include their respective toolchain (node/npm, python/pip, java/maven, etc.).
 
-### Quality Lite vs Quality
+### Analysis vs Scanner
 
-The quality tooling is split into two images to optimize pull times:
+The scanning tooling is split into two images based on their runtime requirements:
 
-- **quality-lite** -- fast to pull, static Go binaries only, ideal for vulnerability scanning and Dockerfile linting in every pipeline
-- **quality** -- heavier, includes Python/Ruby runtimes, for deep SAST analysis, license compliance, and IaC scanning
+- **analysis** -- Python/Ruby runtime, for deep SAST analysis, license compliance, and IaC scanning (semgrep, checkov, scancode, license_finder)
+- **scanner** -- static Go binaries only, fast to pull, for vulnerability scanning, secret detection, Dockerfile linting, and container scanning
 
-Use `quality-lite` when you only need SCA/SBOM/linting. Use `quality` when you need semgrep, checkov, scancode, or license_finder.
+### Analysis Image
 
-### Quality Lite Image
-
-The `brik-runner-quality-lite` image (~450 MB) bundles lightweight static binary tools -- no Python or Ruby runtime:
-
-| Tool | Purpose |
-|------|---------|
-| grype | Vulnerability scanning (SCA) |
-| syft | SBOM generation |
-| osv-scanner | Open-source vulnerability scanning |
-| hadolint | Dockerfile linting |
-
-### Quality Image
-
-The `brik-runner-quality` image (~1.7 GB) bundles Python/Ruby-based analysis tools via multi-stage build (down from ~3 GB):
+The `brik-runner-analysis` image (~1.7 GB) bundles Python/Ruby-based analysis tools via multi-stage build:
 
 | Tool | Purpose |
 |------|---------|
@@ -108,18 +94,19 @@ The `brik-runner-quality` image (~1.7 GB) bundles Python/Ruby-based analysis too
 | scancode-toolkit | License and origin detection |
 | license_finder | License compliance |
 
-### Security Image
+### Scanner Image
 
-The `brik-runner-security` image bundles secret detection and container security tools:
+The `brik-runner-scanner` image (~500 MB) bundles static Go binary tools -- no Python or Ruby runtime:
 
 | Tool | Purpose |
 |------|---------|
-| gitleaks | Secret/credential leak detection |
-| trufflehog | Secret scanning (entropy + patterns) |
-| dockle | Docker image best-practice linting |
 | grype | Vulnerability scanning (SCA) |
 | syft | SBOM generation |
 | osv-scanner | Open-source vulnerability scanning |
+| hadolint | Dockerfile linting |
+| gitleaks | Secret/credential leak detection |
+| trufflehog | Secret scanning (entropy + patterns) |
+| dockle | Docker image best-practice linting |
 
 Pinned versions for all tools are in [`versions.json`](versions.json).
 
@@ -219,7 +206,7 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
 ./scripts/build-local.sh --load node python
 
 # Build specific targets
-./scripts/build-local.sh --load quality-lite-1 quality-1 security-1
+./scripts/build-local.sh --load analysis-1 scanner-1
 ```
 
 ### build-local.sh Options
@@ -243,11 +230,11 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
 # List available targets
 ./scripts/build-local.sh --list
 
-# Rebuild quality image from scratch, single arch
-./scripts/build-local.sh --load --no-cache quality-1
+# Rebuild analysis image from scratch, single arch
+./scripts/build-local.sh --load --no-cache analysis-1
 
 # Build for a specific platform
-./scripts/build-local.sh --platform linux/amd64 security-1
+./scripts/build-local.sh --platform linux/amd64 scanner-1
 
 # Regenerate bake file and build everything
 ./scripts/build-local.sh --regenerate --load

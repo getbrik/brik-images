@@ -49,20 +49,15 @@
       "image_template": "mcr.microsoft.com/dotnet/sdk:${VERSION}",
       "verify_cmd": "dotnet --version"
     },
-    "quality-lite": {
-      "versions": ["1"],
-      "image_template": "alpine:3.23",
-      "verify_cmd": "grype version && syft version && osv-scanner --version && hadolint --version"
-    },
-    "quality": {
+    "analysis": {
       "versions": ["1"],
       "image_template": "alpine:3.23",
       "verify_cmd": "semgrep --version && checkov --version && license_finder version && scancode --version"
     },
-    "security": {
+    "scanner": {
       "versions": ["1"],
       "image_template": "alpine:3.23",
-      "verify_cmd": "gitleaks version && trufflehog --version && grype version && syft version && osv-scanner --version && dockle --version"
+      "verify_cmd": "grype version && syft version && osv-scanner --version && hadolint --version && gitleaks version && trufflehog --version && dockle --version"
     }
   }
 }

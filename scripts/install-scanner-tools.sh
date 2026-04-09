@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
-# install-security-tools.sh - Install security scanning tools into a Docker image.
+# install-scanner-tools.sh - Install scanner tools into a Docker image.
 #
-# Installs: gitleaks, trufflehog, grype, syft, osv-scanner, dockle
+# Installs: grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle
 # All Go binaries from GitHub releases. Multi-arch aware (amd64/arm64).
 
 set -euo pipefail
 
 # Tool versions (pinned for reproducibility)
-GITLEAKS_VERSION="${GITLEAKS_VERSION:-8.24.0}"
-TRUFFLEHOG_VERSION="${TRUFFLEHOG_VERSION:-3.88.26}"
-GRYPE_VERSION="${GRYPE_VERSION:-0.92.0}"
-SYFT_VERSION="${SYFT_VERSION:-1.22.0}"
-OSV_SCANNER_VERSION="${OSV_SCANNER_VERSION:-2.0.1}"
+GRYPE_VERSION="${GRYPE_VERSION:-0.110.0}"
+SYFT_VERSION="${SYFT_VERSION:-1.42.4}"
+OSV_SCANNER_VERSION="${OSV_SCANNER_VERSION:-2.3.5}"
+HADOLINT_VERSION="${HADOLINT_VERSION:-2.14.0}"
+GITLEAKS_VERSION="${GITLEAKS_VERSION:-8.30.1}"
+TRUFFLEHOG_VERSION="${TRUFFLEHOG_VERSION:-3.94.3}"
 DOCKLE_VERSION="${DOCKLE_VERSION:-0.4.15}"
 
-log() { printf '[install-security-tools] %s\n' "$*"; }
+log() { printf '[install-scanner-tools] %s\n' "$*"; }
 
 detect_arch() {
     local arch
@@ -30,26 +31,8 @@ detect_arch() {
 ARCH="$(detect_arch)"
 
 # ---------------------------------------------------------------------------
-# Tool installers
+# SCA / SBOM tools (from quality-lite)
 # ---------------------------------------------------------------------------
-
-install_gitleaks() {
-    log "installing gitleaks ${GITLEAKS_VERSION} (${ARCH})"
-    local arch_suffix="${ARCH}"
-    [[ "$ARCH" == "amd64" ]] && arch_suffix="x64"
-    local url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${arch_suffix}.tar.gz"
-    curl -sSL "$url" | tar xz -C /usr/local/bin gitleaks
-    chmod +x /usr/local/bin/gitleaks
-    gitleaks version
-}
-
-install_trufflehog() {
-    log "installing trufflehog ${TRUFFLEHOG_VERSION} (${ARCH})"
-    local url="https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_${ARCH}.tar.gz"
-    curl -sSL "$url" | tar xz -C /usr/local/bin trufflehog
-    chmod +x /usr/local/bin/trufflehog
-    trufflehog --version
-}
 
 install_grype() {
     log "installing grype ${GRYPE_VERSION} (${ARCH})"
@@ -75,6 +58,38 @@ install_osv_scanner() {
     osv-scanner --version
 }
 
+install_hadolint() {
+    log "installing hadolint ${HADOLINT_VERSION} (${ARCH})"
+    local arch_suffix="${ARCH}"
+    [[ "$ARCH" == "amd64" ]] && arch_suffix="x86_64"
+    local url="https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-Linux-${arch_suffix}"
+    curl -sSL -o /usr/local/bin/hadolint "$url"
+    chmod +x /usr/local/bin/hadolint
+    hadolint --version
+}
+
+# ---------------------------------------------------------------------------
+# Secret detection / container security tools (from security)
+# ---------------------------------------------------------------------------
+
+install_gitleaks() {
+    log "installing gitleaks ${GITLEAKS_VERSION} (${ARCH})"
+    local arch_suffix="${ARCH}"
+    [[ "$ARCH" == "amd64" ]] && arch_suffix="x64"
+    local url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${arch_suffix}.tar.gz"
+    curl -sSL "$url" | tar xz -C /usr/local/bin gitleaks
+    chmod +x /usr/local/bin/gitleaks
+    gitleaks version
+}
+
+install_trufflehog() {
+    log "installing trufflehog ${TRUFFLEHOG_VERSION} (${ARCH})"
+    local url="https://github.com/trufflesecurity/trufflehog/releases/download/v${TRUFFLEHOG_VERSION}/trufflehog_${TRUFFLEHOG_VERSION}_linux_${ARCH}.tar.gz"
+    curl -sSL "$url" | tar xz -C /usr/local/bin trufflehog
+    chmod +x /usr/local/bin/trufflehog
+    trufflehog --version
+}
+
 install_dockle() {
     log "installing dockle ${DOCKLE_VERSION} (${ARCH})"
     local arch_suffix="64bit"
@@ -90,17 +105,18 @@ install_dockle() {
 # ---------------------------------------------------------------------------
 
 main() {
-    log "starting security tools installation"
+    log "starting scanner tools installation"
     log "  ARCH=${ARCH}"
 
-    install_gitleaks
-    install_trufflehog
     install_grype
     install_syft
     install_osv_scanner
+    install_hadolint
+    install_gitleaks
+    install_trufflehog
     install_dockle
 
-    log "all security tools installed successfully"
+    log "all scanner tools installed successfully"
 }
 
 main "$@"

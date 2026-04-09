@@ -44,13 +44,10 @@ jobs:
           dockerfile: images/dotnet/Dockerfile
       - uses: hadolint/hadolint-action@v3.3.0
         with:
-          dockerfile: images/quality-lite/Dockerfile
+          dockerfile: images/analysis/Dockerfile
       - uses: hadolint/hadolint-action@v3.3.0
         with:
-          dockerfile: images/quality/Dockerfile
-      - uses: hadolint/hadolint-action@v3.3.0
-        with:
-          dockerfile: images/security/Dockerfile
+          dockerfile: images/scanner/Dockerfile
 
   generate-matrix:
     name: Generate Build Matrix
@@ -139,22 +136,18 @@ jobs:
         id: tool-args
         run: |
           ARGS=""
-          if [ "${{ matrix.stack }}" = "quality-lite" ]; then
-            ARGS="GRYPE_VERSION=${{ steps.versions.outputs.grype_version }}"
-            ARGS="${ARGS}\nSYFT_VERSION=${{ steps.versions.outputs.syft_version }}"
-            ARGS="${ARGS}\nOSV_SCANNER_VERSION=${{ steps.versions.outputs.osv_scanner_version }}"
-            ARGS="${ARGS}\nHADOLINT_VERSION=${{ steps.versions.outputs.hadolint_version }}"
-          elif [ "${{ matrix.stack }}" = "quality" ]; then
+          if [ "${{ matrix.stack }}" = "analysis" ]; then
             ARGS="SEMGREP_VERSION=${{ steps.versions.outputs.semgrep_version }}"
             ARGS="${ARGS}\nCHECKOV_VERSION=${{ steps.versions.outputs.checkov_version }}"
             ARGS="${ARGS}\nLICENSE_FINDER_VERSION=${{ steps.versions.outputs.license_finder_version }}"
             ARGS="${ARGS}\nSCANCODE_VERSION=${{ steps.versions.outputs.scancode_toolkit_version }}"
-          elif [ "${{ matrix.stack }}" = "security" ]; then
-            ARGS="GITLEAKS_VERSION=${{ steps.versions.outputs.gitleaks_version }}"
-            ARGS="${ARGS}\nTRUFFLEHOG_VERSION=${{ steps.versions.outputs.trufflehog_version }}"
-            ARGS="${ARGS}\nGRYPE_VERSION=${{ steps.versions.outputs.grype_version }}"
+          elif [ "${{ matrix.stack }}" = "scanner" ]; then
+            ARGS="GRYPE_VERSION=${{ steps.versions.outputs.grype_version }}"
             ARGS="${ARGS}\nSYFT_VERSION=${{ steps.versions.outputs.syft_version }}"
             ARGS="${ARGS}\nOSV_SCANNER_VERSION=${{ steps.versions.outputs.osv_scanner_version }}"
+            ARGS="${ARGS}\nHADOLINT_VERSION=${{ steps.versions.outputs.hadolint_version }}"
+            ARGS="${ARGS}\nGITLEAKS_VERSION=${{ steps.versions.outputs.gitleaks_version }}"
+            ARGS="${ARGS}\nTRUFFLEHOG_VERSION=${{ steps.versions.outputs.trufflehog_version }}"
             ARGS="${ARGS}\nDOCKLE_VERSION=${{ steps.versions.outputs.dockle_version }}"
           fi
           # Use multiline output

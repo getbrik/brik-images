@@ -1,4 +1,5 @@
-# brik-runner-quality - Full quality scanning tools (Python + Ruby, multi-stage)
+# brik-runner-analysis - Full analysis tools (Python + Ruby, multi-stage)
+# Contains: semgrep, checkov, scancode-toolkit, license_finder
 ARG VERSION=1
 
 # ---------------------------------------------------------------------------
@@ -28,8 +29,8 @@ ENV SEMGREP_VERSION=${SEMGREP_VERSION} \
     LICENSE_FINDER_VERSION=${LICENSE_FINDER_VERSION} \
     SCANCODE_VERSION=${SCANCODE_VERSION}
 
-COPY scripts/install-quality-tools.sh /tmp/install-quality-tools.sh
-RUN chmod +x /tmp/install-quality-tools.sh && /tmp/install-quality-tools.sh
+COPY scripts/install-analysis-tools.sh /tmp/install-analysis-tools.sh
+RUN chmod +x /tmp/install-analysis-tools.sh && /tmp/install-analysis-tools.sh
 
 # Collect all new scripts added by pip/gem into /installed-bin
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -52,8 +53,8 @@ ARG LICENSE_FINDER_VERSION=7.2.1
 ARG SCANCODE_VERSION=32.5.0
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
-LABEL org.opencontainers.image.title="brik-runner-quality"
-LABEL org.opencontainers.image.description="Brik CI runner with quality tools (semgrep, checkov, license_finder, scancode)"
+LABEL org.opencontainers.image.title="brik-runner-analysis"
+LABEL org.opencontainers.image.description="Brik CI runner with analysis tools (semgrep, checkov, license_finder, scancode)"
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
@@ -87,7 +88,7 @@ COPY --from=builder /installed-bin/ /usr/bin/
 COPY --from=builder /usr/lib/ruby/gems /usr/lib/ruby/gems
 
 # Verify all tools work
-RUN echo "brik-runner-quality" > /.brik-runner \
+RUN echo "brik-runner-analysis" > /.brik-runner \
     && yq --version && jq --version && git --version && bash --version \
     && semgrep --version \
     && checkov --version \

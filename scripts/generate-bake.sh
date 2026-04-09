@@ -74,15 +74,7 @@ HEADER
 
             # Build args block - base args for all stacks
             extra_args=""
-            if [[ "$stack" == "quality-lite" ]]; then
-                extra_args=$(cat <<XARGS
-    GRYPE_VERSION           = "${SECURITY_TOOLS[grype]}"
-    SYFT_VERSION            = "${SECURITY_TOOLS[syft]}"
-    OSV_SCANNER_VERSION     = "${SECURITY_TOOLS[osv_scanner]}"
-    HADOLINT_VERSION        = "${SECURITY_TOOLS[hadolint]}"
-XARGS
-)
-            elif [[ "$stack" == "quality" ]]; then
+            if [[ "$stack" == "analysis" ]]; then
                 extra_args=$(cat <<XARGS
     SEMGREP_VERSION         = "${SECURITY_TOOLS[semgrep]}"
     CHECKOV_VERSION         = "${SECURITY_TOOLS[checkov]}"
@@ -90,13 +82,14 @@ XARGS
     SCANCODE_VERSION        = "${SECURITY_TOOLS[scancode_toolkit]}"
 XARGS
 )
-            elif [[ "$stack" == "security" ]]; then
+            elif [[ "$stack" == "scanner" ]]; then
                 extra_args=$(cat <<XARGS
-    GITLEAKS_VERSION        = "${SECURITY_TOOLS[gitleaks]}"
-    TRUFFLEHOG_VERSION      = "${SECURITY_TOOLS[trufflehog]}"
     GRYPE_VERSION           = "${SECURITY_TOOLS[grype]}"
     SYFT_VERSION            = "${SECURITY_TOOLS[syft]}"
     OSV_SCANNER_VERSION     = "${SECURITY_TOOLS[osv_scanner]}"
+    HADOLINT_VERSION        = "${SECURITY_TOOLS[hadolint]}"
+    GITLEAKS_VERSION        = "${SECURITY_TOOLS[gitleaks]}"
+    TRUFFLEHOG_VERSION      = "${SECURITY_TOOLS[trufflehog]}"
     DOCKLE_VERSION          = "${SECURITY_TOOLS[dockle]}"
 XARGS
 )
