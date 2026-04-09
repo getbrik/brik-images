@@ -32,6 +32,7 @@ COPY scripts/install-quality-tools.sh /tmp/install-quality-tools.sh
 RUN chmod +x /tmp/install-quality-tools.sh && /tmp/install-quality-tools.sh
 
 # Collect all new scripts added by pip/gem into /installed-bin
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /installed-bin \
     && comm -13 /tmp/bin-before.txt <(ls /usr/bin) | while read -r f; do \
          cp "/usr/bin/$f" /installed-bin/; \
