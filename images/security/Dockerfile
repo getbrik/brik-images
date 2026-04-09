@@ -24,8 +24,8 @@ RUN apk add --no-cache bash git curl ca-certificates
 ENV YQ_VERSION=${YQ_VERSION} \
     JQ_VERSION=${JQ_VERSION}
 
-COPY scripts/install-brik.sh /tmp/install-brik.sh
-RUN chmod +x /tmp/install-brik.sh && /tmp/install-brik.sh && rm /tmp/install-brik.sh
+COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
+RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh
 
 # Security tools - pass versions as env vars for install script
 ENV GITLEAKS_VERSION=${GITLEAKS_VERSION} \

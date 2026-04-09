@@ -36,8 +36,8 @@ ENV EXTRACTCODE_LIBARCHIVE_PATH=/usr/lib/libarchive.so.13 \
 ENV YQ_VERSION=${YQ_VERSION} \
     JQ_VERSION=${JQ_VERSION}
 
-COPY scripts/install-brik.sh /tmp/install-brik.sh
-RUN chmod +x /tmp/install-brik.sh && /tmp/install-brik.sh && rm /tmp/install-brik.sh
+COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
+RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh
 
 # Quality tools - pass versions as env vars for install script
 ENV SEMGREP_VERSION=${SEMGREP_VERSION} \

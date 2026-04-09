@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install-brik.sh - Install Brik prerequisites into a Docker image.
+# install-brik-prereqs.sh - Install Brik prerequisites into a Docker image.
 #
 # Installs: yq, jq, git, docker-cli (if missing).
 # Multi-arch aware (amd64/arm64).

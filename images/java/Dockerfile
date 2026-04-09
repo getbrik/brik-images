@@ -19,8 +19,8 @@ RUN apt-get update -qq \
 ENV YQ_VERSION=${YQ_VERSION} \
     JQ_VERSION=${JQ_VERSION}
 
-COPY scripts/install-brik.sh /tmp/install-brik.sh
-RUN chmod +x /tmp/install-brik.sh && /tmp/install-brik.sh && rm /tmp/install-brik.sh
+COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
+RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh
 
 # Mark as brik-runner image (detected by setup.sh to skip prerequisite install)
 RUN echo "brik-runner" > /.brik-runner
