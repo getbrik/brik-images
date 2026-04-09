@@ -26,6 +26,12 @@ REGISTRY="$(jq -r '.registry' "$VERSIONS_FILE")"
 YQ_VERSION="$(jq -r '.tools.yq' "$VERSIONS_FILE")"
 JQ_VERSION="$(jq -r '.tools.jq' "$VERSIONS_FILE")"
 
+# Read security_tools versions (used by quality and security images)
+declare -A SECURITY_TOOLS
+while IFS='=' read -r key value; do
+    SECURITY_TOOLS["$key"]="$value"
+done < <(jq -r '.security_tools | to_entries[] | "\(.key)=\(.value)"' "$VERSIONS_FILE")
+
 # Collect all target names for the default group
 ALL_TARGETS=()
 
@@ -66,6 +72,38 @@ HEADER
             fi
             tags+="]"
 
+            # Build args block - base args for all stacks
+            extra_args=""
+            if [[ "$stack" == "quality" ]]; then
+                extra_args=$(cat <<XARGS
+    SEMGREP_VERSION         = "${SECURITY_TOOLS[semgrep]}"
+    OSV_SCANNER_VERSION     = "${SECURITY_TOOLS[osv_scanner]}"
+    GRYPE_VERSION           = "${SECURITY_TOOLS[grype]}"
+    SYFT_VERSION            = "${SECURITY_TOOLS[syft]}"
+    CHECKOV_VERSION         = "${SECURITY_TOOLS[checkov]}"
+    HADOLINT_VERSION        = "${SECURITY_TOOLS[hadolint]}"
+    LICENSE_FINDER_VERSION  = "${SECURITY_TOOLS[license_finder]}"
+    SCANCODE_VERSION        = "${SECURITY_TOOLS[scancode_toolkit]}"
+XARGS
+)
+            elif [[ "$stack" == "security" ]]; then
+                extra_args=$(cat <<XARGS
+    GITLEAKS_VERSION        = "${SECURITY_TOOLS[gitleaks]}"
+    TRUFFLEHOG_VERSION      = "${SECURITY_TOOLS[trufflehog]}"
+    GRYPE_VERSION           = "${SECURITY_TOOLS[grype]}"
+    SYFT_VERSION            = "${SECURITY_TOOLS[syft]}"
+    OSV_SCANNER_VERSION     = "${SECURITY_TOOLS[osv_scanner]}"
+    DOCKLE_VERSION          = "${SECURITY_TOOLS[dockle]}"
+XARGS
+)
+            fi
+
+            # Format extra_args: add leading newline only if non-empty
+            formatted_extra=""
+            if [[ -n "$extra_args" ]]; then
+                formatted_extra=$'\n'"${extra_args}"
+            fi
+
             cat <<EOF
 target "${target_name}" {
   dockerfile = "images/${stack}/Dockerfile"
@@ -73,7 +111,7 @@ target "${target_name}" {
   args = {
     VERSION    = "${version}"
     YQ_VERSION = "${YQ_VERSION}"
-    JQ_VERSION = "${JQ_VERSION}"
+    JQ_VERSION = "${JQ_VERSION}"${formatted_extra}
   }
   platforms = ["linux/amd64", "linux/arm64"]
   tags = ${tags}

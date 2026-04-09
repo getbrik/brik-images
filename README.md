@@ -27,6 +27,8 @@ Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-sp
 | `brik-runner-rust` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/rust-1.json) | `docker pull ghcr.io/getbrik/brik-runner-rust:1` |
 | `brik-runner-dotnet` | `9.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-9.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:9.0` |
 | `brik-runner-dotnet` | `10.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-10.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:10.0` |
+| `brik-runner-quality` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/quality-1.json) | `docker pull ghcr.io/getbrik/brik-runner-quality` |
+| `brik-runner-security` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/security-1.json) | `docker pull ghcr.io/getbrik/brik-runner-security` |
 
 All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
@@ -54,10 +56,13 @@ Check the [Security tab](https://github.com/getbrik/brik-images/security/code-sc
 Each image is published with multiple tags:
 
 ```
-ghcr.io/getbrik/brik-runner-node:22              # stack version
-ghcr.io/getbrik/brik-runner-node:latest           # latest LTS
+ghcr.io/getbrik/brik-runner-node:22              # stack version (mutable)
+ghcr.io/getbrik/brik-runner-node:latest           # latest LTS (mutable)
 ghcr.io/getbrik/brik-runner-node:sha-a1b2c3d      # immutable git SHA
+ghcr.io/getbrik/brik-runner-node:22@sha256:...    # digest pin (most secure)
 ```
+
+**For production pipelines**, pin images by digest (`@sha256:...`) to guarantee reproducible builds. Mutable tags like `:22` or `:latest` can change on rebuilds. Use `docker inspect --format='{{index .RepoDigests 0}}' <image>` to retrieve the current digest.
 
 ## What's Included
 
@@ -70,6 +75,36 @@ Every image contains:
 - **curl** - HTTP client
 
 Stack images additionally include their respective toolchain (node/npm, python/pip, java/maven, etc.).
+
+### Quality Image
+
+The `brik-runner-quality` image bundles static analysis, license compliance, and vulnerability scanning tools:
+
+| Tool | Purpose |
+|------|---------|
+| semgrep | Static analysis (SAST) |
+| checkov | Infrastructure-as-Code scanning |
+| scancode-toolkit | License and origin detection |
+| hadolint | Dockerfile linting |
+| license_finder | License compliance |
+| grype | Vulnerability scanning (SCA) |
+| syft | SBOM generation |
+| osv-scanner | Open-source vulnerability scanning |
+
+### Security Image
+
+The `brik-runner-security` image bundles secret detection and container security tools:
+
+| Tool | Purpose |
+|------|---------|
+| gitleaks | Secret/credential leak detection |
+| trufflehog | Secret scanning (entropy + patterns) |
+| dockle | Docker image best-practice linting |
+| grype | Vulnerability scanning (SCA) |
+| syft | SBOM generation |
+| osv-scanner | Open-source vulnerability scanning |
+
+Pinned versions for all tools are in [`versions.json`](versions.json).
 
 **Note:** The brik runtime is NOT pre-installed. It is cloned at CI time by the shared library's `before_script`. This decouples image releases from brik releases.
 
@@ -90,6 +125,7 @@ Once brik reaches a stable release cadence, the runtime will be pre-installed in
 ```yaml
 # .gitlab-ci.yml
 variables:
+  # Pin by digest for reproducible builds: ghcr.io/getbrik/brik-runner-node:22@sha256:...
   BRIK_CI_IMAGE: "ghcr.io/getbrik/brik-runner-node:22"
 
 include:
@@ -102,7 +138,7 @@ Or override per-job:
 
 ```yaml
 build:
-  image: ghcr.io/getbrik/brik-runner-node:22
+  image: ghcr.io/getbrik/brik-runner-node:22  # or :22@sha256:... for digest pin
   script:
     - brik run stage build
 ```
@@ -113,6 +149,8 @@ build:
 pipeline {
     agent {
         docker {
+            // Pin by digest for reproducible builds:
+            // image 'ghcr.io/getbrik/brik-runner-java:21@sha256:...'
             image 'ghcr.io/getbrik/brik-runner-java:21'
         }
     }
@@ -133,6 +171,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
+      # Pin by digest for reproducible builds:
+      # image: ghcr.io/getbrik/brik-runner-node:22@sha256:...
       image: ghcr.io/getbrik/brik-runner-node:22
     steps:
       - uses: actions/checkout@v4
@@ -149,26 +189,75 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
 
 ## Building Locally
 
+### Quick Start
+
+```bash
+# Build all images (multi-arch, no push)
+./scripts/build-local.sh
+
+# Build and load into local Docker (native arch only)
+./scripts/build-local.sh --load
+
+# Build specific stacks (expands to all versions)
+./scripts/build-local.sh --load node python
+
+# Build specific targets
+./scripts/build-local.sh --load quality-1 security-1
+```
+
+### build-local.sh Options
+
+| Option | Description |
+|--------|-------------|
+| (no args) | Build all images (multi-arch) |
+| `<stack>` | Build all versions of a stack (e.g. `node` builds `node-22` + `node-24`) |
+| `<target>` | Build a specific target (e.g. `node-22`, `quality-1`) |
+| `--load` | Load images into local Docker (forces native arch) |
+| `--platform PLAT` | Override platforms (e.g. `linux/amd64`) |
+| `--no-cache` | Disable Docker build cache |
+| `--regenerate` | Regenerate `docker-bake.hcl` before building |
+| `--push` | Push images to registry (requires authentication) |
+| `--list` | List all available targets and stacks |
+| `--dry-run` | Show the command without executing it |
+
+### Examples
+
+```bash
+# List available targets
+./scripts/build-local.sh --list
+
+# Rebuild quality image from scratch, single arch
+./scripts/build-local.sh --load --no-cache quality-1
+
+# Build for a specific platform
+./scripts/build-local.sh --platform linux/amd64 security-1
+
+# Regenerate bake file and build everything
+./scripts/build-local.sh --regenerate --load
+
+# Preview the command without running it
+./scripts/build-local.sh --dry-run node java
+```
+
+### Other Scripts
+
 ```bash
 # Generate the bake file from the version matrix
 ./scripts/generate-bake.sh
 
-# Build all images (local only, no push)
-docker buildx bake --load
-
-# Build a single target
-docker buildx bake --load node-22
-
-# Run smoke tests
+# Run smoke tests on built images
 ./scripts/smoke-test.sh
+
+# Lint Dockerfiles
+hadolint images/*/Dockerfile
 ```
 
 ## Version Matrix
 
-The build matrix is defined in `versions.json`. To add a new stack version:
+All tool and stack versions are defined in `versions.json` (single source of truth). To add or update a version:
 
 1. Edit `versions.json`
-2. Run `./scripts/generate-bake.sh`
+2. Run `./scripts/generate-bake.sh` (or use `--regenerate` with `build-local.sh`)
 3. Commit and push -- CI handles the rest
 
 ## License

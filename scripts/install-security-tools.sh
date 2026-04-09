@@ -35,7 +35,9 @@ ARCH="$(detect_arch)"
 
 install_gitleaks() {
     log "installing gitleaks ${GITLEAKS_VERSION} (${ARCH})"
-    local url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${ARCH}.tar.gz"
+    local arch_suffix="${ARCH}"
+    [[ "$ARCH" == "amd64" ]] && arch_suffix="x64"
+    local url="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_${arch_suffix}.tar.gz"
     curl -sSL "$url" | tar xz -C /usr/local/bin gitleaks
     chmod +x /usr/local/bin/gitleaks
     gitleaks version
@@ -75,7 +77,9 @@ install_osv_scanner() {
 
 install_dockle() {
     log "installing dockle ${DOCKLE_VERSION} (${ARCH})"
-    local url="https://github.com/goodwithtech/dockle/releases/download/v${DOCKLE_VERSION}/dockle_${DOCKLE_VERSION}_Linux-${ARCH}.tar.gz"
+    local arch_suffix="64bit"
+    [[ "$ARCH" == "arm64" ]] && arch_suffix="ARM64"
+    local url="https://github.com/goodwithtech/dockle/releases/download/v${DOCKLE_VERSION}/dockle_${DOCKLE_VERSION}_Linux-${arch_suffix}.tar.gz"
     curl -sSL "$url" | tar xz -C /usr/local/bin dockle
     chmod +x /usr/local/bin/dockle
     dockle --version

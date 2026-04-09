@@ -4,6 +4,12 @@ FROM alpine:3.23
 
 ARG YQ_VERSION=v4.52.5
 ARG JQ_VERSION=1.8.1
+ARG GITLEAKS_VERSION=8.24.0
+ARG TRUFFLEHOG_VERSION=3.88.26
+ARG GRYPE_VERSION=0.92.0
+ARG SYFT_VERSION=1.22.0
+ARG OSV_SCANNER_VERSION=2.0.1
+ARG DOCKLE_VERSION=0.4.15
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-security"
@@ -21,7 +27,14 @@ ENV YQ_VERSION=${YQ_VERSION} \
 COPY scripts/install-brik.sh /tmp/install-brik.sh
 RUN chmod +x /tmp/install-brik.sh && /tmp/install-brik.sh && rm /tmp/install-brik.sh
 
-# Security tools
+# Security tools - pass versions as env vars for install script
+ENV GITLEAKS_VERSION=${GITLEAKS_VERSION} \
+    TRUFFLEHOG_VERSION=${TRUFFLEHOG_VERSION} \
+    GRYPE_VERSION=${GRYPE_VERSION} \
+    SYFT_VERSION=${SYFT_VERSION} \
+    OSV_SCANNER_VERSION=${OSV_SCANNER_VERSION} \
+    DOCKLE_VERSION=${DOCKLE_VERSION}
+
 COPY scripts/install-security-tools.sh /tmp/install-security-tools.sh
 RUN chmod +x /tmp/install-security-tools.sh && /tmp/install-security-tools.sh && rm /tmp/install-security-tools.sh
 

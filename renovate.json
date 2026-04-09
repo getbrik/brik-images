@@ -7,6 +7,127 @@
       "automerge": true,
       "platformAutomerge": true,
       "matchUpdateTypes": ["digest"]
+    },
+    {
+      "description": "Group all security_tools updates in versions.json",
+      "matchFileNames": ["versions.json"],
+      "groupName": "security-tools",
+      "groupSlug": "security-tools"
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "yq version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"yq\":\\s*\"(?<currentValue>v[^\"]+)\""],
+      "depNameTemplate": "mikefarah/yq",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "jq version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"jq\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "jqlang/jq",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^jq-(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "semgrep version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"semgrep\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "semgrep/semgrep",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "osv-scanner version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"osv_scanner\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "google/osv-scanner",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "grype version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"grype\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "anchore/grype",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "syft version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"syft\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "anchore/syft",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "checkov version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"checkov\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "checkov",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "hadolint version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"hadolint\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "hadolint/hadolint",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "license_finder version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"license_finder\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "license_finder",
+      "datasourceTemplate": "rubygems"
+    },
+    {
+      "customType": "regex",
+      "description": "scancode-toolkit version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"scancode_toolkit\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "scancode-toolkit",
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "description": "gitleaks version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"gitleaks\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "gitleaks/gitleaks",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "trufflehog version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"trufflehog\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "trufflesecurity/trufflehog",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "dockle version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"dockle\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "goodwithtech/dockle",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
     }
   ]
 }
