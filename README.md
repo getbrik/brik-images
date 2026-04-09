@@ -27,6 +27,7 @@ Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-sp
 | `brik-runner-rust` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/rust-1.json) | `docker pull ghcr.io/getbrik/brik-runner-rust:1` |
 | `brik-runner-dotnet` | `9.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-9.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:9.0` |
 | `brik-runner-dotnet` | `10.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-10.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:10.0` |
+| `brik-runner-quality-lite` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/quality-lite-1.json) | `docker pull ghcr.io/getbrik/brik-runner-quality-lite` |
 | `brik-runner-quality` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/quality-1.json) | `docker pull ghcr.io/getbrik/brik-runner-quality` |
 | `brik-runner-security` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/security-1.json) | `docker pull ghcr.io/getbrik/brik-runner-security` |
 
@@ -76,20 +77,36 @@ Every image contains:
 
 Stack images additionally include their respective toolchain (node/npm, python/pip, java/maven, etc.).
 
+### Quality Lite vs Quality
+
+The quality tooling is split into two images to optimize pull times:
+
+- **quality-lite** -- fast to pull, static Go binaries only, ideal for vulnerability scanning and Dockerfile linting in every pipeline
+- **quality** -- heavier, includes Python/Ruby runtimes, for deep SAST analysis, license compliance, and IaC scanning
+
+Use `quality-lite` when you only need SCA/SBOM/linting. Use `quality` when you need semgrep, checkov, scancode, or license_finder.
+
+### Quality Lite Image
+
+The `brik-runner-quality-lite` image (~450 MB) bundles lightweight static binary tools -- no Python or Ruby runtime:
+
+| Tool | Purpose |
+|------|---------|
+| grype | Vulnerability scanning (SCA) |
+| syft | SBOM generation |
+| osv-scanner | Open-source vulnerability scanning |
+| hadolint | Dockerfile linting |
+
 ### Quality Image
 
-The `brik-runner-quality` image bundles static analysis, license compliance, and vulnerability scanning tools:
+The `brik-runner-quality` image (~1.7 GB) bundles Python/Ruby-based analysis tools via multi-stage build (down from ~3 GB):
 
 | Tool | Purpose |
 |------|---------|
 | semgrep | Static analysis (SAST) |
 | checkov | Infrastructure-as-Code scanning |
 | scancode-toolkit | License and origin detection |
-| hadolint | Dockerfile linting |
 | license_finder | License compliance |
-| grype | Vulnerability scanning (SCA) |
-| syft | SBOM generation |
-| osv-scanner | Open-source vulnerability scanning |
 
 ### Security Image
 
@@ -202,7 +219,7 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
 ./scripts/build-local.sh --load node python
 
 # Build specific targets
-./scripts/build-local.sh --load quality-1 security-1
+./scripts/build-local.sh --load quality-lite-1 quality-1 security-1
 ```
 
 ### build-local.sh Options

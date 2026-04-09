@@ -49,10 +49,15 @@
       "image_template": "mcr.microsoft.com/dotnet/sdk:${VERSION}",
       "verify_cmd": "dotnet --version"
     },
+    "quality-lite": {
+      "versions": ["1"],
+      "image_template": "alpine:3.23",
+      "verify_cmd": "grype version && syft version && osv-scanner --version && hadolint --version"
+    },
     "quality": {
       "versions": ["1"],
       "image_template": "alpine:3.23",
-      "verify_cmd": "semgrep --version && osv-scanner --version && grype version && syft version && checkov --version && hadolint --version && license_finder version && scancode --version"
+      "verify_cmd": "semgrep --version && checkov --version && license_finder version && scancode --version"
     },
     "security": {
       "versions": ["1"],

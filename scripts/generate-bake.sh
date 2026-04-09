@@ -74,14 +74,18 @@ HEADER
 
             # Build args block - base args for all stacks
             extra_args=""
-            if [[ "$stack" == "quality" ]]; then
+            if [[ "$stack" == "quality-lite" ]]; then
                 extra_args=$(cat <<XARGS
-    SEMGREP_VERSION         = "${SECURITY_TOOLS[semgrep]}"
-    OSV_SCANNER_VERSION     = "${SECURITY_TOOLS[osv_scanner]}"
     GRYPE_VERSION           = "${SECURITY_TOOLS[grype]}"
     SYFT_VERSION            = "${SECURITY_TOOLS[syft]}"
-    CHECKOV_VERSION         = "${SECURITY_TOOLS[checkov]}"
+    OSV_SCANNER_VERSION     = "${SECURITY_TOOLS[osv_scanner]}"
     HADOLINT_VERSION        = "${SECURITY_TOOLS[hadolint]}"
+XARGS
+)
+            elif [[ "$stack" == "quality" ]]; then
+                extra_args=$(cat <<XARGS
+    SEMGREP_VERSION         = "${SECURITY_TOOLS[semgrep]}"
+    CHECKOV_VERSION         = "${SECURITY_TOOLS[checkov]}"
     LICENSE_FINDER_VERSION  = "${SECURITY_TOOLS[license_finder]}"
     SCANCODE_VERSION        = "${SECURITY_TOOLS[scancode_toolkit]}"
 XARGS
