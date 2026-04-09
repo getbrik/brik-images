@@ -1,0 +1,20 @@
+# Grype configuration for Brik runner images.
+#
+# Ignore rules for known CVEs in upstream Go binaries that we cannot fix
+# until the upstream projects release new versions compiled with a patched Go.
+# Review periodically and remove entries once upstream releases are available.
+
+ignore:
+  # dockle 0.4.15 compiled with go1.22.10 (project appears unmaintained).
+  # gitleaks 8.30.1 compiled with go1.24.11, needs >= 1.24.13.
+  #
+  # These CVEs are in the Go stdlib statically linked into upstream binaries.
+  # We cannot fix them without new upstream releases.
+
+  # CVE-2025-22871: net/http request smuggling via whitespace in headers.
+  # Affects: dockle (go1.22.10), fixed in go1.23.8 / go1.24.2.
+  - vulnerability: CVE-2025-22871
+
+  # CVE-2025-68121: stdlib vulnerability fixed in go1.24.13.
+  # Affects: dockle (go1.22.10), gitleaks (go1.24.11).
+  - vulnerability: CVE-2025-68121
