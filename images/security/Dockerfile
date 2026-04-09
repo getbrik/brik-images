@@ -36,16 +36,10 @@ ENV GITLEAKS_VERSION=${GITLEAKS_VERSION} \
     DOCKLE_VERSION=${DOCKLE_VERSION}
 
 COPY scripts/install-security-tools.sh /tmp/install-security-tools.sh
-RUN chmod +x /tmp/install-security-tools.sh && /tmp/install-security-tools.sh && rm /tmp/install-security-tools.sh
-
-# Cleanup
-RUN rm -rf /var/cache/apk/* /tmp/*
-
-# Mark as brik-runner image
-RUN echo "brik-runner-security" > /.brik-runner
-
-# Verify all tools
-RUN yq --version && jq --version && git --version && bash --version \
+RUN chmod +x /tmp/install-security-tools.sh && /tmp/install-security-tools.sh \
+    && rm -rf /tmp/* /var/cache/apk/* \
+    && echo "brik-runner-security" > /.brik-runner \
+    && yq --version && jq --version && git --version && bash --version \
     && gitleaks version \
     && trufflehog --version \
     && grype version \

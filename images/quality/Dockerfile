@@ -50,16 +50,11 @@ ENV SEMGREP_VERSION=${SEMGREP_VERSION} \
     SCANCODE_VERSION=${SCANCODE_VERSION}
 
 COPY scripts/install-quality-tools.sh /tmp/install-quality-tools.sh
-RUN chmod +x /tmp/install-quality-tools.sh && /tmp/install-quality-tools.sh && rm /tmp/install-quality-tools.sh
-
-# Cleanup build dependencies
-RUN apk del build-base ruby-dev python3-dev icu-dev pkgconf && rm -rf /var/cache/apk/* /root/.cache /tmp/*
-
-# Mark as brik-runner image
-RUN echo "brik-runner-quality" > /.brik-runner
-
-# Verify all tools
-RUN yq --version && jq --version && git --version && bash --version \
+RUN chmod +x /tmp/install-quality-tools.sh && /tmp/install-quality-tools.sh \
+    && apk del build-base ruby-dev python3-dev icu-dev pkgconf \
+    && rm -rf /var/cache/apk/* /root/.cache /tmp/* \
+    && echo "brik-runner-quality" > /.brik-runner \
+    && yq --version && jq --version && git --version && bash --version \
     && semgrep --version \
     && osv-scanner --version \
     && grype version \
