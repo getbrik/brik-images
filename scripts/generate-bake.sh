@@ -26,6 +26,12 @@ REGISTRY="$(jq -r '.registry' "$VERSIONS_FILE")"
 YQ_VERSION="$(jq -r '.tools.yq' "$VERSIONS_FILE")"
 JQ_VERSION="$(jq -r '.tools.jq' "$VERSIONS_FILE")"
 
+# Read deploy_tools versions (used by deploy image)
+declare -A DEPLOY_TOOLS
+while IFS='=' read -r key value; do
+    DEPLOY_TOOLS["$key"]="$value"
+done < <(jq -r '.deploy_tools | to_entries[] | "\(.key)=\(.value)"' "$VERSIONS_FILE")
+
 # Read security_tools versions (used by quality and security images)
 declare -A SECURITY_TOOLS
 while IFS='=' read -r key value; do
@@ -91,6 +97,13 @@ XARGS
     GITLEAKS_VERSION        = "${SECURITY_TOOLS[gitleaks]}"
     TRUFFLEHOG_VERSION      = "${SECURITY_TOOLS[trufflehog]}"
     DOCKLE_VERSION          = "${SECURITY_TOOLS[dockle]}"
+XARGS
+)
+            elif [[ "$stack" == "deploy" ]]; then
+                extra_args=$(cat <<XARGS
+    HELM_VERSION            = "${DEPLOY_TOOLS[helm]}"
+    KUBECTL_VERSION         = "${DEPLOY_TOOLS[kubectl]}"
+    ARGOCD_VERSION          = "${DEPLOY_TOOLS[argocd]}"
 XARGS
 )
             fi

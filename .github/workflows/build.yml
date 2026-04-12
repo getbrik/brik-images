@@ -48,19 +48,25 @@ jobs:
       - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: images/scanner/Dockerfile
+      - uses: hadolint/hadolint-action@v3.3.0
+        with:
+          dockerfile: images/deploy/Dockerfile
 
   generate-matrix:
     name: Generate Build Matrix
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      matrix-dependent: ${{ steps.matrix.outputs.matrix_dependent }}
     steps:
       - uses: actions/checkout@v6
       - id: matrix
         run: |
+          # Standalone images (no dependency on other brik-runner images)
           matrix=$(jq -c '{
             include: [
               .stacks | to_entries[] |
+              select(.key != "deploy") |
               .key as $stack |
               .value.versions[] as $version |
               {
@@ -71,6 +77,22 @@ jobs:
             ]
           }' versions.json)
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+
+          # Dependent images (require brik-runner-base to be built first)
+          matrix_dependent=$(jq -c '{
+            include: [
+              .stacks | to_entries[] |
+              select(.key == "deploy") |
+              .key as $stack |
+              .value.versions[] as $version |
+              {
+                stack: $stack,
+                version: $version,
+                verify_cmd: .value.verify_cmd
+              }
+            ]
+          }' versions.json)
+          echo "matrix_dependent=${matrix_dependent}" >> "$GITHUB_OUTPUT"
 
   build:
     name: Build ${{ matrix.stack }}:${{ matrix.version }}
@@ -101,6 +123,12 @@ jobs:
         run: |
           echo "yq_version=$(jq -r '.tools.yq' versions.json)" >> "$GITHUB_OUTPUT"
           echo "jq_version=$(jq -r '.tools.jq' versions.json)" >> "$GITHUB_OUTPUT"
+
+          # Read deploy_tools versions (used by deploy image)
+          for key in $(jq -r '.deploy_tools | keys[]' versions.json); do
+            value=$(jq -r ".deploy_tools.\"${key}\"" versions.json)
+            echo "${key}_version=${value}" >> "$GITHUB_OUTPUT"
+          done
 
           # Read security_tools versions (used by quality and security images)
           for key in $(jq -r '.security_tools | keys[]' versions.json); do
@@ -141,6 +169,10 @@ jobs:
             ARGS="${ARGS}\nCHECKOV_VERSION=${{ steps.versions.outputs.checkov_version }}"
             ARGS="${ARGS}\nLICENSE_FINDER_VERSION=${{ steps.versions.outputs.license_finder_version }}"
             ARGS="${ARGS}\nSCANCODE_VERSION=${{ steps.versions.outputs.scancode_toolkit_version }}"
+          elif [ "${{ matrix.stack }}" = "deploy" ]; then
+            ARGS="HELM_VERSION=${{ steps.versions.outputs.helm_version }}"
+            ARGS="${ARGS}\nKUBECTL_VERSION=${{ steps.versions.outputs.kubectl_version }}"
+            ARGS="${ARGS}\nARGOCD_VERSION=${{ steps.versions.outputs.argocd_version }}"
           elif [ "${{ matrix.stack }}" = "scanner" ]; then
             ARGS="GRYPE_VERSION=${{ steps.versions.outputs.grype_version }}"
             ARGS="${ARGS}\nSYFT_VERSION=${{ steps.versions.outputs.syft_version }}"
@@ -303,9 +335,104 @@ jobs:
             fi
           }
 
+  # --- Phase 2: images that depend on brik-runner-base ---
+  build-dependent:
+    name: Build ${{ matrix.stack }}:${{ matrix.version }}
+    needs: [build, generate-matrix]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix-dependent) }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Read versions
+        id: versions
+        run: |
+          for key in $(jq -r '.deploy_tools | keys[]' versions.json); do
+            value=$(jq -r ".deploy_tools.\"${key}\"" versions.json)
+            echo "${key}_version=${value}" >> "$GITHUB_OUTPUT"
+          done
+
+          first=$(jq -r ".stacks.\"${{ matrix.stack }}\".versions[0]" versions.json)
+          if [ "$first" = "${{ matrix.version }}" ]; then
+            echo "is_latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_latest=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compute tags
+        id: tags
+        run: |
+          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}"
+          VERSION="${{ matrix.version }}"
+          SHA="sha-${GITHUB_SHA::7}"
+
+          TAGS="${IMAGE}:${VERSION}"
+          TAGS="${TAGS},${IMAGE}:${SHA}"
+
+          if [ "${{ steps.versions.outputs.is_latest }}" = "true" ]; then
+            TAGS="${TAGS},${IMAGE}:latest"
+          fi
+
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        if: github.event_name != 'pull_request'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: images/${{ matrix.stack }}/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            HELM_VERSION=${{ steps.versions.outputs.helm_version }}
+            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl_version }}
+            ARGOCD_VERSION=${{ steps.versions.outputs.argocd_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build image (PR - amd64 only)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: images/${{ matrix.stack }}/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            HELM_VERSION=${{ steps.versions.outputs.helm_version }}
+            KUBECTL_VERSION=${{ steps.versions.outputs.kubectl_version }}
+            ARGOCD_VERSION=${{ steps.versions.outputs.argocd_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Smoke test
+        if: github.event_name == 'pull_request'
+        run: |
+          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+          echo "Testing ${IMAGE}"
+          docker run --rm "${IMAGE}" bash -c '${{ matrix.verify_cmd }}'
+
   update-badges:
     name: Update Security Badges
-    needs: [build]
+    needs: [build, build-dependent]
     if: github.event_name != 'pull_request' && always()
     runs-on: ubuntu-latest
     permissions:

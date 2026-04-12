@@ -4,6 +4,11 @@
     "yq": "v4.52.5",
     "jq": "1.8.1"
   },
+  "deploy_tools": {
+    "helm": "v4.1.3",
+    "kubectl": "v1.35.3",
+    "argocd": "v3.3.6"
+  },
   "security_tools": {
     "semgrep": "1.157.0",
     "osv_scanner": "2.3.5",
@@ -58,6 +63,11 @@
       "versions": ["1"],
       "image_template": "alpine:3.23",
       "verify_cmd": "grype version && syft version && osv-scanner --version && hadolint --version && gitleaks version && trufflehog --version && dockle --version"
+    },
+    "deploy": {
+      "versions": ["1"],
+      "image_template": "ghcr.io/getbrik/brik-runner-base:latest",
+      "verify_cmd": "helm version --short && kubectl version --client && argocd version --client"
     }
   }
 }
