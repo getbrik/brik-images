@@ -12,6 +12,8 @@ LABEL org.opencontainers.image.description="Brik CI runner with deploy tools (co
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
+SHELL ["/bin/ash", "-eo", "pipefail", "-c"]
+
 # Alpine packages: docker compose plugin, ssh client, rsync
 RUN apk add --no-cache docker-cli-compose openssh-client rsync
 
@@ -40,5 +42,5 @@ RUN docker compose version \
     && ssh -V \
     && rsync --version | head -1 \
     && helm version --short \
-    && kubectl version --client --short 2>/dev/null || kubectl version --client \
-    && argocd version --client --short 2>/dev/null || argocd version --client
+    && kubectl version --client \
+    && argocd version --client
