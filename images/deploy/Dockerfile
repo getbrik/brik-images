@@ -1,5 +1,6 @@
 # brik-runner-deploy - Deploy tools for Brik CI/CD pipelines
 # Includes: docker compose, ssh, rsync, helm, kubectl, argocd CLI
+# hadolint ignore=DL3007
 FROM ghcr.io/getbrik/brik-runner-base:latest
 
 ARG HELM_VERSION=v4.1.3
@@ -38,6 +39,7 @@ RUN ARCH="$(uname -m)" \
     && chmod +x /usr/local/bin/argocd
 
 # Verify all deploy tools
+# hadolint ignore=DL3001
 RUN docker compose version \
     && ssh -V \
     && rsync --version | head -1 \
