@@ -42,7 +42,7 @@ RUN ARCH="$(uname -m)" \
 # hadolint ignore=DL3001
 RUN docker compose version \
     && ssh -V \
-    && rsync --version | head -1 \
+    && rsync --version \
     && helm version --short \
     && kubectl version --client \
     && argocd version --client
