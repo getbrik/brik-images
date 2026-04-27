@@ -20,6 +20,10 @@ RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm 
 # Mark as brik-runner image (detected by setup.sh to skip prerequisite install)
 RUN echo "brik-runner" > /.brik-runner
 
-# Install clippy and rustfmt for quality checks, then verify prerequisites + stack
-RUN rustup component add clippy rustfmt \
-    && yq --version && jq --version && rustc --version && cargo --version
+# Install Rust components for quality checks (clippy, rustfmt) plus the
+# llvm-tools-preview component (used by cargo-llvm-cov), and the chantier 15
+# test-reporting helpers cargo-nextest (JUnit) and cargo-llvm-cov (lcov).
+RUN rustup component add clippy rustfmt llvm-tools-preview \
+    && cargo install --locked cargo-nextest cargo-llvm-cov \
+    && yq --version && jq --version && rustc --version && cargo --version \
+    && cargo nextest --version && cargo llvm-cov --version
