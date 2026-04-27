@@ -2,7 +2,7 @@
 ARG VERSION=3.12
 FROM python:${VERSION}-slim
 
-ARG YQ_VERSION=v4.52.5
+ARG YQ_VERSION=v4.53.2
 ARG JQ_VERSION=1.8.1
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"

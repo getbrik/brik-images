@@ -2,7 +2,7 @@
 ARG VERSION=3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
 FROM alpine:${VERSION}
 
-ARG YQ_VERSION=v4.52.5
+ARG YQ_VERSION=v4.53.2
 ARG JQ_VERSION=1.8.1
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"

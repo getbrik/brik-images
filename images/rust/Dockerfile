@@ -2,7 +2,7 @@
 ARG VERSION=1
 FROM rust:${VERSION}-slim-bookworm
 
-ARG YQ_VERSION=v4.52.5
+ARG YQ_VERSION=v4.53.2
 ARG JQ_VERSION=1.8.1
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
@@ -23,7 +23,15 @@ RUN echo "brik-runner" > /.brik-runner
 # Install Rust components for quality checks (clippy, rustfmt) plus the
 # llvm-tools-preview component (used by cargo-llvm-cov), and the chantier 15
 # test-reporting helpers cargo-nextest (JUnit) and cargo-llvm-cov (lcov).
+# cargo-binstall fetches prebuilt binaries from each project's GitHub
+# release tarball, avoiding a multi-arch from-source compile that takes
+# ~30 minutes under QEMU emulation. cargo-nextest also publishes a
+# canonical install path at https://get.nexte.st but cargo-binstall keeps
+# both helpers on the same install path.
 RUN rustup component add clippy rustfmt llvm-tools-preview \
-    && cargo install --locked cargo-nextest cargo-llvm-cov \
+    && curl -L --proto '=https' --tlsv1.2 -sSf \
+        https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
+        | bash \
+    && cargo binstall --no-confirm cargo-nextest cargo-llvm-cov \
     && yq --version && jq --version && rustc --version && cargo --version \
     && cargo nextest --version && cargo llvm-cov --version
