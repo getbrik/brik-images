@@ -7,6 +7,7 @@
 ignore:
   # dockle 0.4.15 compiled with go1.22.10 (project appears unmaintained).
   # gitleaks 8.30.1 compiled with go1.24.11, needs >= 1.24.13.
+  # osv-scanner 2.3.5 compiled with go1.26.1.
   #
   # These CVEs are in the Go stdlib statically linked into upstream binaries.
   # We cannot fix them without new upstream releases.
@@ -18,3 +19,11 @@ ignore:
   # CVE-2025-68121: stdlib vulnerability fixed in go1.24.13.
   # Affects: dockle (go1.22.10), gitleaks (go1.24.11).
   - vulnerability: CVE-2025-68121
+
+  # CVE-2026-27143: arithmetic over induction variables in loops not
+  # checked for overflow, allowing memory corruption at runtime.
+  # Affects: osv-scanner (go1.26.1), gitleaks (go1.24.11), dockle
+  # (go1.22.10) -- none of these have a patched upstream release yet.
+  # yq v4.52.5 was also affected and has been bumped to v4.53.2 which
+  # ships a patched Go (no longer needs an ignore once images rebuild).
+  - vulnerability: CVE-2026-27143
