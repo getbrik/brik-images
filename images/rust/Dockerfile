@@ -28,6 +28,7 @@ RUN echo "brik-runner" > /.brik-runner
 # ~30 minutes under QEMU emulation. cargo-nextest also publishes a
 # canonical install path at https://get.nexte.st but cargo-binstall keeps
 # both helpers on the same install path.
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN rustup component add clippy rustfmt llvm-tools-preview \
     && curl -L --proto '=https' --tlsv1.2 -sSf \
         https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh \
