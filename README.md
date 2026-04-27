@@ -51,6 +51,44 @@ These images bundle the latest available versions of their respective base image
 
 Check the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for the current scan results of every image.
 
+### Suppressed CVEs (read this)
+
+A small number of CVEs are intentionally suppressed in [`.grype.yaml`](.grype.yaml) so the build can stay green while we wait for upstream fixes. The full list is canonical in `.grype.yaml`; the table below explains the rationale at a glance:
+
+| CVE | Affected binaries | Why suppressed | Removal criterion |
+|-----|-------------------|----------------|-------------------|
+| [CVE-2025-22871](https://nvd.nist.gov/vuln/detail/CVE-2025-22871) | `dockle` (statically linked go1.22.10) | Net/http request smuggling fixed in go1.23.8 / go1.24.2. The `dockle` upstream project appears unmaintained (last release 2025-01-06) and has not rebuilt against a patched Go. | `dockle` releases a new version compiled with go >= 1.23.8 |
+| [CVE-2025-68121](https://nvd.nist.gov/vuln/detail/CVE-2025-68121) | `dockle` (go1.22.10), `gitleaks` (go1.24.11) | Go stdlib vulnerability fixed in go1.24.13. Latest `gitleaks` release (v8.30.1, 2026-03-12) was cut before that Go release; `dockle` is unmaintained. | `gitleaks` and `dockle` rebuild against go >= 1.24.13 |
+| [CVE-2026-27143](https://nvd.nist.gov/vuln/detail/CVE-2026-27143) | `osv-scanner` (go1.26.1), `gitleaks` (go1.24.11), `dockle` (go1.22.10) | Compiler bug allowing memory corruption via integer overflow in induction-variable arithmetic. None of the three tools have a patched upstream release yet. `yq` was also affected on v4.52.5; we have already bumped `yq` to v4.53.2 which ships a patched Go. | All three tools rebuild against a patched Go release |
+
+**Our reasoning.** Each suppression covers a CVE we cannot remediate from inside the image: the vulnerable binary is published statically by an upstream project on a pre-fix Go toolchain, and rebuilding from source with a patched Go would mean shipping a fork. We accept that exposure in exchange for keeping the scanner image available, with the trade-off documented per CVE so the next maintainer can audit it.
+
+#### Automated weekly review
+
+Every Monday at 02:30 UTC the [`CVE Suppression Review`](.github/workflows/cve-review.yml) workflow runs [`scripts/review-cve-suppressions.sh`](scripts/review-cve-suppressions.sh), compares each suppressed tool against its upstream GitHub release, and refreshes a sticky issue labelled [`cve-suppression-review`](https://github.com/getbrik/brik-images/issues?q=is%3Aopen+is%3Aissue+label%3Acve-suppression-review) with the result. The trade-off therefore stays visible on the repository dashboard and every BUMP_AVAILABLE row triggers an explicit follow-up. The structured metadata that drives the script lives in [`.cve-suppressions.json`](.cve-suppressions.json) -- treat it as the single source of truth for what needs to be reviewed.
+
+You can run the same script locally on demand:
+
+```bash
+./scripts/review-cve-suppressions.sh
+```
+
+It requires `jq` and an authenticated `gh` CLI, and prints the same Markdown report to stdout.
+
+#### Maintainer playbook
+
+When the sticky issue refreshes:
+
+1. **Open the issue** -- look for any row whose status is `BUMP_AVAILABLE`.
+2. **Bump the tool** -- update the version in [`versions.json`](versions.json) (and the matching `ARG` default in any Dockerfile that pins it).
+3. **Drop the suppression** -- if the next CI build no longer flags the CVE, remove the entry from both [`.grype.yaml`](.grype.yaml) AND [`.cve-suppressions.json`](.cve-suppressions.json), plus the row from the table above. Commit with `fix(scan): drop CVE-XXXX-YYYYY suppression now that <tool> ships go>=X.Y.Z`.
+
+When you need to add a new suppression:
+
+1. Prefer bumping the offending binary to a release that ships a patched compiler before suppressing anything.
+2. If no patched upstream release exists, add the entry to **all three** of `.grype.yaml`, `.cve-suppressions.json`, and the table above. The script and workflow rely on the JSON metadata staying in lockstep with the YAML.
+3. Each entry must record the affected binaries and the upstream runtime version (e.g. go1.24.11), plus a clear removal criterion.
+
 ## Tag Convention
 
 Each image is published with multiple tags:
@@ -69,7 +107,7 @@ ghcr.io/getbrik/brik-runner-node:22@sha256:...    # digest pin (most secure)
 Every image contains:
 
 - **bash** (5.x)
-- **yq** (v4.52.5) - YAML processor
+- **yq** (v4.53.2) - YAML processor
 - **jq** (1.8.1) - JSON processor
 - **git** - version control
 - **curl** - HTTP client
