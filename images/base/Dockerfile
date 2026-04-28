@@ -12,9 +12,9 @@ ARG JV_VERSION=v6.0.2
 FROM golang:1.23-alpine AS jv-builder
 ARG JV_VERSION
 RUN apk add --no-cache git \
- && git clone --depth 1 --branch ${JV_VERSION} https://github.com/santhosh-tekuri/jsonschema /src \
- && cd /src/cmd/jv \
- && CGO_ENABLED=0 go build -ldflags="-s -w" -o /jv .
+ && git clone --depth 1 --branch ${JV_VERSION} https://github.com/santhosh-tekuri/jsonschema /src
+WORKDIR /src/cmd/jv
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /jv .
 
 # ---------------------------------------------------------------------------
 # Stage 2: brik-runner-base
