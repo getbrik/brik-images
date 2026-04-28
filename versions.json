@@ -2,7 +2,8 @@
   "registry": "ghcr.io/getbrik",
   "tools": {
     "yq": "v4.53.2",
-    "jq": "1.8.1"
+    "jq": "1.8.1",
+    "jv": "v6.0.2"
   },
   "deploy_tools": {
     "helm": "v4.1.4",

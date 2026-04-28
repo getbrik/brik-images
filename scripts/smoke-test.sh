@@ -50,7 +50,17 @@ smoke_test_image() {
         log_fail "${image}: git --version"
     fi
 
-    # Test 4: stack-specific verification
+    # Test 4: jv (JSON Schema validator) available -- only on images that ship it
+    # (currently: brik-runner-base, used by the init stage). Skip silently elsewhere.
+    if docker run --rm "$image" sh -c 'command -v jv' >/dev/null 2>&1; then
+        if docker run --rm "$image" jv --version >/dev/null 2>&1; then
+            log_pass "jv --version"
+        else
+            log_fail "${image}: jv --version"
+        fi
+    fi
+
+    # Test 5: stack-specific verification
     if [[ -n "$verify_cmd" ]]; then
         if docker run --rm "$image" bash -c "$verify_cmd" >/dev/null 2>&1; then
             log_pass "verify: ${verify_cmd}"
