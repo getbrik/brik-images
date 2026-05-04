@@ -12,10 +12,11 @@ ARG HADOLINT_VERSION=2.14.0
 ARG GITLEAKS_VERSION=8.30.1
 ARG TRUFFLEHOG_VERSION=3.94.3
 ARG DOCKLE_VERSION=0.4.15
+ARG CYCLONEDX_CLI_VERSION=0.27.2
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-scanner"
-LABEL org.opencontainers.image.description="Brik CI runner with scanning tools (grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle)"
+LABEL org.opencontainers.image.description="Brik CI runner with scanning tools (grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle, cyclonedx-cli)"
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
@@ -37,7 +38,8 @@ ENV GRYPE_VERSION=${GRYPE_VERSION} \
     HADOLINT_VERSION=${HADOLINT_VERSION} \
     GITLEAKS_VERSION=${GITLEAKS_VERSION} \
     TRUFFLEHOG_VERSION=${TRUFFLEHOG_VERSION} \
-    DOCKLE_VERSION=${DOCKLE_VERSION}
+    DOCKLE_VERSION=${DOCKLE_VERSION} \
+    CYCLONEDX_CLI_VERSION=${CYCLONEDX_CLI_VERSION}
 
 COPY scripts/install-scanner-tools.sh /tmp/install-scanner-tools.sh
 RUN chmod +x /tmp/install-scanner-tools.sh && /tmp/install-scanner-tools.sh \
@@ -50,4 +52,5 @@ RUN chmod +x /tmp/install-scanner-tools.sh && /tmp/install-scanner-tools.sh \
     && hadolint --version \
     && gitleaks version \
     && trufflehog --version \
-    && dockle --version
+    && dockle --version \
+    && cyclonedx-cli --version

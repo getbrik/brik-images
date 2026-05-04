@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # install-scanner-tools.sh - Install scanner tools into a Docker image.
 #
-# Installs: grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle
-# All Go binaries from GitHub releases. Multi-arch aware (amd64/arm64).
+# Installs: grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle, cyclonedx-cli
+# All Go and .NET-based binaries from GitHub releases. Multi-arch aware (amd64/arm64).
 
 set -euo pipefail
 
@@ -14,6 +14,7 @@ HADOLINT_VERSION="${HADOLINT_VERSION:-2.14.0}"
 GITLEAKS_VERSION="${GITLEAKS_VERSION:-8.30.1}"
 TRUFFLEHOG_VERSION="${TRUFFLEHOG_VERSION:-3.94.3}"
 DOCKLE_VERSION="${DOCKLE_VERSION:-0.4.15}"
+CYCLONEDX_CLI_VERSION="${CYCLONEDX_CLI_VERSION:-0.27.2}"
 
 log() { printf '[install-scanner-tools] %s\n' "$*"; }
 
@@ -100,6 +101,16 @@ install_dockle() {
     dockle --version
 }
 
+install_cyclonedx_cli() {
+    log "installing cyclonedx-cli ${CYCLONEDX_CLI_VERSION} (${ARCH})"
+    local arch_suffix="${ARCH}"
+    [[ "$ARCH" == "amd64" ]] && arch_suffix="x64"
+    local url="https://github.com/CycloneDX/cyclonedx-cli/releases/download/v${CYCLONEDX_CLI_VERSION}/cyclonedx-linux-${arch_suffix}"
+    curl -sSL -o /usr/local/bin/cyclonedx-cli "$url"
+    chmod +x /usr/local/bin/cyclonedx-cli
+    cyclonedx-cli --version
+}
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -115,6 +126,7 @@ main() {
     install_gitleaks
     install_trufflehog
     install_dockle
+    install_cyclonedx_cli
 
     log "all scanner tools installed successfully"
 }
