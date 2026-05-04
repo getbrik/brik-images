@@ -12,7 +12,7 @@ ARG HADOLINT_VERSION=2.14.0
 ARG GITLEAKS_VERSION=8.30.1
 ARG TRUFFLEHOG_VERSION=3.94.3
 ARG DOCKLE_VERSION=0.4.15
-ARG CYCLONEDX_CLI_VERSION=0.27.2
+ARG CYCLONEDX_CLI_VERSION=0.31.0
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-scanner"
@@ -23,6 +23,11 @@ LABEL org.opencontainers.image.licenses="MIT"
 # Base dependencies (no Python, no Ruby)
 RUN apk add --no-cache bash git curl ca-certificates \
     && rm -rf /var/cache/apk/*
+
+# cyclonedx-cli (.NET self-contained on amd64) needs invariant globalization
+# at runtime. Setting it as ENV in the image keeps the cli usable from any
+# downstream brik runtime call without per-invocation env wiring.
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 # Brik prerequisites (yq, jq, git, docker-cli)
 ENV YQ_VERSION=${YQ_VERSION} \
@@ -53,4 +58,4 @@ RUN chmod +x /tmp/install-scanner-tools.sh && /tmp/install-scanner-tools.sh \
     && gitleaks version \
     && trufflehog --version \
     && dockle --version \
-    && cyclonedx-cli --version
+    && (test -x /usr/local/bin/cyclonedx-cli && cyclonedx-cli --version || echo "cyclonedx-cli skipped (no upstream musl-arm64); jq fallback handles SBOM merge")

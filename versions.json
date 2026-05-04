@@ -22,7 +22,7 @@
     "gitleaks": "8.30.1",
     "trufflehog": "3.95.2",
     "dockle": "0.4.15",
-    "cyclonedx_cli": "0.27.2"
+    "cyclonedx_cli": "0.31.0"
   },
   "stacks": {
     "base": {

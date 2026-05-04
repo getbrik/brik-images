@@ -14,7 +14,7 @@ HADOLINT_VERSION="${HADOLINT_VERSION:-2.14.0}"
 GITLEAKS_VERSION="${GITLEAKS_VERSION:-8.30.1}"
 TRUFFLEHOG_VERSION="${TRUFFLEHOG_VERSION:-3.94.3}"
 DOCKLE_VERSION="${DOCKLE_VERSION:-0.4.15}"
-CYCLONEDX_CLI_VERSION="${CYCLONEDX_CLI_VERSION:-0.27.2}"
+CYCLONEDX_CLI_VERSION="${CYCLONEDX_CLI_VERSION:-0.31.0}"
 
 log() { printf '[install-scanner-tools] %s\n' "$*"; }
 
@@ -102,13 +102,38 @@ install_dockle() {
 }
 
 install_cyclonedx_cli() {
-    log "installing cyclonedx-cli ${CYCLONEDX_CLI_VERSION} (${ARCH})"
-    local arch_suffix="${ARCH}"
-    [[ "$ARCH" == "amd64" ]] && arch_suffix="x64"
+    # CycloneDX/cyclonedx-cli is a .NET self-contained binary. The Linux
+    # releases ship glibc and musl variants for amd64, but no musl-arm64
+    # exists upstream as of v0.31.0 (2026-04-29). On Alpine/musl arm64
+    # we skip the install: lib/transverse/sbom.sh::sbom.merge falls back
+    # to a pure-jq merge (proven by Phase 2 specs) when the binary is
+    # absent.
+    #
+    # The musl-x64 variant is dynamically linked against libstdc++ and
+    # libgcc_s (provided by Alpine's libstdc++ package), and expects ICU
+    # for globalization. We avoid the 30 MB icu-libs dependency by
+    # exporting DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 globally for the
+    # binary (cyclonedx-cli only manipulates JSON, no locale-dependent
+    # logic).
+    local arch_suffix=""
+    case "$ARCH" in
+        amd64) arch_suffix="musl-x64" ;;
+        arm64)
+            log "cyclonedx-cli ${CYCLONEDX_CLI_VERSION} skipped (no musl-arm64 binary upstream); jq fallback in sbom.sh handles SBOM merge"
+            return 0
+            ;;
+        *)
+            log "cyclonedx-cli skipped (unsupported arch=${ARCH})"
+            return 0
+            ;;
+    esac
+
+    log "installing cyclonedx-cli ${CYCLONEDX_CLI_VERSION} (${ARCH}, ${arch_suffix})"
+    apk add --no-cache libstdc++ >/dev/null
     local url="https://github.com/CycloneDX/cyclonedx-cli/releases/download/v${CYCLONEDX_CLI_VERSION}/cyclonedx-linux-${arch_suffix}"
     curl -sSL -o /usr/local/bin/cyclonedx-cli "$url"
     chmod +x /usr/local/bin/cyclonedx-cli
-    cyclonedx-cli --version
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 cyclonedx-cli --version
 }
 
 # ---------------------------------------------------------------------------
