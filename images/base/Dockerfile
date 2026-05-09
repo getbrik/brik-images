@@ -1,6 +1,6 @@
 # brik-runner-base - Alpine with Brik prerequisites
 ARG VERSION=3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
-ARG JV_VERSION=v6.0.2
+ARG JV_VERSION=v0.7.0
 
 # ---------------------------------------------------------------------------
 # Stage 1: build jv (santhosh-tekuri/jsonschema CLI) from source.
@@ -8,13 +8,17 @@ ARG JV_VERSION=v6.0.2
 # (Alpine musl, Debian/Ubuntu glibc) without runtime dependencies.
 # Required because upstream releases ship asymmetric binaries: linux-arm64
 # is static but linux-amd64 is glibc-dynamic, breaking Alpine amd64.
+# cmd/jv is a separate Go module from the parent jsonschema library.
+# Its tags follow `cmd/jv/v0.x.y`, independent of the library's `v6.x.y`.
+# v0.7.0 is the latest published cmd/jv tag and pulls in
+# jsonschema/v6 v6.0.1 transitively.
 # ---------------------------------------------------------------------------
 FROM golang:1.23-alpine AS jv-builder
 ARG JV_VERSION
+ENV CGO_ENABLED=0
 RUN apk add --no-cache git \
- && git clone --depth 1 --branch ${JV_VERSION} https://github.com/santhosh-tekuri/jsonschema /src
-WORKDIR /src/cmd/jv
-RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /jv .
+ && go install -ldflags="-s -w" "github.com/santhosh-tekuri/jsonschema/cmd/jv@${JV_VERSION}" \
+ && cp /go/bin/jv /jv
 
 # ---------------------------------------------------------------------------
 # Stage 2: brik-runner-base
