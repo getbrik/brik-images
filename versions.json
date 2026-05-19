@@ -4,26 +4,26 @@
     "yq": "v4.53.2",
     "jq": "1.8.1",
     "jv": "v0.7.0",
-    "docker_buildx": "v0.30.0"
+    "docker_buildx": "v0.34.0"
   },
   "deploy_tools": {
-    "helm": "v4.1.4",
-    "kubectl": "v1.36.0",
-    "argocd": "v3.3.6"
+    "helm": "v4.2.0",
+    "kubectl": "v1.36.1",
+    "argocd": "v3.4.2"
   },
   "security_tools": {
-    "semgrep": "1.161.0",
-    "osv_scanner": "2.3.5",
-    "grype": "0.111.1",
-    "syft": "1.43.0",
-    "checkov": "3.2.525",
+    "semgrep": "1.163.0",
+    "osv_scanner": "2.3.8",
+    "grype": "0.112.0",
+    "syft": "1.44.0",
+    "checkov": "3.2.529",
     "hadolint": "2.14.0",
     "license_finder": "7.2.1",
     "scancode_toolkit": "32.5.0",
     "gitleaks": "8.30.1",
-    "trufflehog": "3.95.2",
+    "trufflehog": "3.95.3",
     "dockle": "0.4.15",
-    "cyclonedx_cli": "0.31.0"
+    "cyclonedx_cli": "0.32.0"
   },
   "stacks": {
     "base": {

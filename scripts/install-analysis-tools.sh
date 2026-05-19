@@ -6,11 +6,14 @@
 
 set -euo pipefail
 
-# Tool versions (pinned for reproducibility)
-SEMGREP_VERSION="${SEMGREP_VERSION:-1.157.0}"
-CHECKOV_VERSION="${CHECKOV_VERSION:-3.2.517}"
-LICENSE_FINDER_VERSION="${LICENSE_FINDER_VERSION:-7.2.1}"
-SCANCODE_VERSION="${SCANCODE_VERSION:-32.5.0}"
+# Tool versions are passed in from the Docker build (ARG -> ENV) and
+# originate in versions.json (the single source of truth). Failing fast
+# here surfaces a missing wire-up in generate-bake.sh or the Dockerfile
+# instead of silently baking a stale binary.
+: "${SEMGREP_VERSION:?SEMGREP_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${CHECKOV_VERSION:?CHECKOV_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${LICENSE_FINDER_VERSION:?LICENSE_FINDER_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${SCANCODE_VERSION:?SCANCODE_VERSION must be set (passed from versions.json via Docker ARG)}"
 
 log() { printf '[install-analysis-tools] %s\n' "$*"; }
 

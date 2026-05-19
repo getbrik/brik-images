@@ -13,9 +13,13 @@
 
 set -euo pipefail
 
-YQ_VERSION="${YQ_VERSION:-v4.53.2}"
-JQ_VERSION="${JQ_VERSION:-1.8.1}"
-DOCKER_BUILDX_VERSION="${DOCKER_BUILDX_VERSION:-v0.30.0}"
+# Tool versions are passed in from the Docker build (ARG -> ENV) and
+# originate in versions.json (the single source of truth). Failing fast
+# here surfaces a missing wire-up in generate-bake.sh or the Dockerfile
+# instead of silently baking a stale binary.
+: "${YQ_VERSION:?YQ_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${JQ_VERSION:?JQ_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${DOCKER_BUILDX_VERSION:?DOCKER_BUILDX_VERSION must be set (passed from versions.json via Docker ARG)}"
 
 # ---------------------------------------------------------------------------
 # Helpers

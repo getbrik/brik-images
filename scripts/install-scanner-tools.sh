@@ -6,15 +6,18 @@
 
 set -euo pipefail
 
-# Tool versions (pinned for reproducibility)
-GRYPE_VERSION="${GRYPE_VERSION:-0.110.0}"
-SYFT_VERSION="${SYFT_VERSION:-1.42.4}"
-OSV_SCANNER_VERSION="${OSV_SCANNER_VERSION:-2.3.5}"
-HADOLINT_VERSION="${HADOLINT_VERSION:-2.14.0}"
-GITLEAKS_VERSION="${GITLEAKS_VERSION:-8.30.1}"
-TRUFFLEHOG_VERSION="${TRUFFLEHOG_VERSION:-3.94.3}"
-DOCKLE_VERSION="${DOCKLE_VERSION:-0.4.15}"
-CYCLONEDX_CLI_VERSION="${CYCLONEDX_CLI_VERSION:-0.31.0}"
+# Tool versions are passed in from the Docker build (ARG -> ENV) and
+# originate in versions.json (the single source of truth). Failing fast
+# here surfaces a missing wire-up in generate-bake.sh or the Dockerfile
+# instead of silently baking a stale binary.
+: "${GRYPE_VERSION:?GRYPE_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${SYFT_VERSION:?SYFT_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${OSV_SCANNER_VERSION:?OSV_SCANNER_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${HADOLINT_VERSION:?HADOLINT_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${GITLEAKS_VERSION:?GITLEAKS_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${TRUFFLEHOG_VERSION:?TRUFFLEHOG_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${DOCKLE_VERSION:?DOCKLE_VERSION must be set (passed from versions.json via Docker ARG)}"
+: "${CYCLONEDX_CLI_VERSION:?CYCLONEDX_CLI_VERSION must be set (passed from versions.json via Docker ARG)}"
 
 log() { printf '[install-scanner-tools] %s\n' "$*"; }
 

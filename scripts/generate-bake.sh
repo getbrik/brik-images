@@ -98,6 +98,7 @@ XARGS
     GITLEAKS_VERSION        = "${SECURITY_TOOLS[gitleaks]}"
     TRUFFLEHOG_VERSION      = "${SECURITY_TOOLS[trufflehog]}"
     DOCKLE_VERSION          = "${SECURITY_TOOLS[dockle]}"
+    CYCLONEDX_CLI_VERSION   = "${SECURITY_TOOLS[cyclonedx_cli]}"
 XARGS
 )
             elif [[ "$stack" == "deploy" ]]; then
