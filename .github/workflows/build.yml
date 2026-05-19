@@ -123,6 +123,7 @@ jobs:
         run: |
           echo "yq_version=$(jq -r '.tools.yq' versions.json)" >> "$GITHUB_OUTPUT"
           echo "jq_version=$(jq -r '.tools.jq' versions.json)" >> "$GITHUB_OUTPUT"
+          echo "docker_buildx_version=$(jq -r '.tools.docker_buildx' versions.json)" >> "$GITHUB_OUTPUT"
 
           # Read deploy_tools versions (used by deploy image)
           for key in $(jq -r '.deploy_tools | keys[]' versions.json); do
@@ -202,6 +203,7 @@ jobs:
             VERSION=${{ matrix.version }}
             YQ_VERSION=${{ steps.versions.outputs.yq_version }}
             JQ_VERSION=${{ steps.versions.outputs.jq_version }}
+            DOCKER_BUILDX_VERSION=${{ steps.versions.outputs.docker_buildx_version }}
             ${{ steps.tool-args.outputs.args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -219,6 +221,7 @@ jobs:
             VERSION=${{ matrix.version }}
             YQ_VERSION=${{ steps.versions.outputs.yq_version }}
             JQ_VERSION=${{ steps.versions.outputs.jq_version }}
+            DOCKER_BUILDX_VERSION=${{ steps.versions.outputs.docker_buildx_version }}
             ${{ steps.tool-args.outputs.args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
