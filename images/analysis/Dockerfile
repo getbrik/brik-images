@@ -1,6 +1,6 @@
 # brik-runner-analysis - Full analysis tools (Python + Ruby, multi-stage)
 # Contains: semgrep, checkov, scancode-toolkit, license_finder
-ARG VERSION=1
+ARG VERSION
 
 # ---------------------------------------------------------------------------
 # Stage 1: builder - install Python/Ruby tools with dev dependencies
@@ -44,7 +44,7 @@ RUN mkdir -p /installed-bin \
 # ---------------------------------------------------------------------------
 FROM alpine:3.23
 
-ARG VERSION=1
+ARG VERSION
 ARG YQ_VERSION
 ARG JQ_VERSION
 ARG SEMGREP_VERSION

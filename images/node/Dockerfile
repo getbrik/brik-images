@@ -1,5 +1,5 @@
 # brik-runner-node - Node.js with Brik prerequisites
-ARG VERSION=22
+ARG VERSION
 FROM node:${VERSION}-slim
 
 ARG YQ_VERSION

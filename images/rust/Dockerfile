@@ -1,5 +1,5 @@
 # brik-runner-rust - Rust with Brik prerequisites
-ARG VERSION=1
+ARG VERSION
 FROM rust:${VERSION}-slim-bookworm
 
 ARG YQ_VERSION

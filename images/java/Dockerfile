@@ -1,5 +1,5 @@
 # brik-runner-java - Java + Maven with Brik prerequisites
-ARG VERSION=21
+ARG VERSION
 FROM eclipse-temurin:${VERSION}-jdk-jammy
 
 ARG YQ_VERSION

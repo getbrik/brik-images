@@ -1,6 +1,6 @@
 # brik-runner-scanner - Security scanning tools (static Go binaries)
 # Contains: grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle
-ARG VERSION=1
+ARG VERSION
 FROM alpine:3.23
 
 ARG YQ_VERSION

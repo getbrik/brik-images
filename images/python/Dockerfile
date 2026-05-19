@@ -1,5 +1,5 @@
 # brik-runner-python - Python with Brik prerequisites
-ARG VERSION=3.12
+ARG VERSION
 FROM python:${VERSION}-slim
 
 ARG YQ_VERSION
