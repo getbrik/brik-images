@@ -15,6 +15,7 @@ set -euo pipefail
 
 YQ_VERSION="${YQ_VERSION:-v4.53.2}"
 JQ_VERSION="${JQ_VERSION:-1.8.1}"
+DOCKER_BUILDX_VERSION="${DOCKER_BUILDX_VERSION:-v0.30.0}"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -203,6 +204,47 @@ install_docker_cli() {
 }
 
 # ---------------------------------------------------------------------------
+# Install Docker Buildx (CLI plugin)
+# ---------------------------------------------------------------------------
+# brik-package's docker.sh uses `docker buildx build --load` when buildx
+# is available, falling back to the deprecated legacy `docker build`
+# otherwise. The legacy path emits a Docker DEPRECATED notice that is
+# surfaced as a [WARN] in brik-lint's business outcome and an upcoming
+# Docker Engine release will remove it entirely. Install buildx as a
+# CLI plugin so brik-package consistently uses BuildKit.
+#
+# Installation method: download the static binary from the official
+# GitHub releases (works on any base image without depending on the
+# distro package manager carrying the plugin), and place it under
+# /usr/local/lib/docker/cli-plugins/ -- Docker's well-known system-wide
+# plugin path that the docker CLI auto-discovers.
+install_docker_buildx() {
+    if docker buildx version >/dev/null 2>&1; then
+        log "docker buildx already installed"
+        return 0
+    fi
+
+    if ! command -v docker >/dev/null 2>&1; then
+        log "docker not installed -- skipping buildx (would have no docker CLI to plug into)"
+        return 0
+    fi
+
+    local arch os
+    arch="$(detect_arch)"
+    os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+    local plugin_dir="/usr/local/lib/docker/cli-plugins"
+    local plugin_path="${plugin_dir}/docker-buildx"
+    local url="https://github.com/docker/buildx/releases/download/${DOCKER_BUILDX_VERSION}/buildx-${DOCKER_BUILDX_VERSION}.${os}-${arch}"
+
+    log "installing docker buildx ${DOCKER_BUILDX_VERSION} (${os}/${arch})"
+    mkdir -p "$plugin_dir"
+    curl -sSL -o "$plugin_path" "$url"
+    chmod +x "$plugin_path"
+    docker buildx version
+    log "docker buildx installed"
+}
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -210,12 +252,14 @@ main() {
     log "starting Brik prerequisites installation"
     log "  YQ_VERSION=${YQ_VERSION}"
     log "  JQ_VERSION=${JQ_VERSION}"
+    log "  DOCKER_BUILDX_VERSION=${DOCKER_BUILDX_VERSION}"
 
     install_curl
     install_git
     install_yq
     install_jq
     install_docker_cli
+    install_docker_buildx
 
     log "all Brik prerequisites installed successfully"
 }
