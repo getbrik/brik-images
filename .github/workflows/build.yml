@@ -123,6 +123,7 @@ jobs:
         run: |
           echo "yq_version=$(jq -r '.tools.yq' versions.json)" >> "$GITHUB_OUTPUT"
           echo "jq_version=$(jq -r '.tools.jq' versions.json)" >> "$GITHUB_OUTPUT"
+          echo "jv_version=$(jq -r '.tools.jv' versions.json)" >> "$GITHUB_OUTPUT"
           echo "docker_buildx_version=$(jq -r '.tools.docker_buildx' versions.json)" >> "$GITHUB_OUTPUT"
 
           # Read deploy_tools versions (used by deploy image)
@@ -165,7 +166,9 @@ jobs:
         id: tool-args
         run: |
           ARGS=""
-          if [ "${{ matrix.stack }}" = "analysis" ]; then
+          if [ "${{ matrix.stack }}" = "base" ]; then
+            ARGS="JV_VERSION=${{ steps.versions.outputs.jv_version }}"
+          elif [ "${{ matrix.stack }}" = "analysis" ]; then
             ARGS="SEMGREP_VERSION=${{ steps.versions.outputs.semgrep_version }}"
             ARGS="${ARGS}\nCHECKOV_VERSION=${{ steps.versions.outputs.checkov_version }}"
             ARGS="${ARGS}\nLICENSE_FINDER_VERSION=${{ steps.versions.outputs.license_finder_version }}"
@@ -182,6 +185,7 @@ jobs:
             ARGS="${ARGS}\nGITLEAKS_VERSION=${{ steps.versions.outputs.gitleaks_version }}"
             ARGS="${ARGS}\nTRUFFLEHOG_VERSION=${{ steps.versions.outputs.trufflehog_version }}"
             ARGS="${ARGS}\nDOCKLE_VERSION=${{ steps.versions.outputs.dockle_version }}"
+            ARGS="${ARGS}\nCYCLONEDX_CLI_VERSION=${{ steps.versions.outputs.cyclonedx_cli_version }}"
           fi
           # Use multiline output
           {
