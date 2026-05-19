@@ -4,6 +4,7 @@ FROM eclipse-temurin:${VERSION}-jdk-jammy
 
 ARG YQ_VERSION=v4.53.2
 ARG JQ_VERSION=1.8.1
+ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-java"
@@ -17,7 +18,8 @@ RUN apt-get update -qq \
     && rm -rf /var/lib/apt/lists/*
 
 ENV YQ_VERSION=${YQ_VERSION} \
-    JQ_VERSION=${JQ_VERSION}
+    JQ_VERSION=${JQ_VERSION} \
+    DOCKER_BUILDX_VERSION=${DOCKER_BUILDX_VERSION}
 
 COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
 RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh

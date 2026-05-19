@@ -26,6 +26,7 @@ REGISTRY="$(jq -r '.registry' "$VERSIONS_FILE")"
 YQ_VERSION="$(jq -r '.tools.yq' "$VERSIONS_FILE")"
 JQ_VERSION="$(jq -r '.tools.jq' "$VERSIONS_FILE")"
 JV_VERSION="$(jq -r '.tools.jv' "$VERSIONS_FILE")"
+DOCKER_BUILDX_VERSION="$(jq -r '.tools.docker_buildx' "$VERSIONS_FILE")"
 
 # Read deploy_tools versions (used by deploy image)
 declare -A DEPLOY_TOOLS
@@ -126,6 +127,14 @@ XARGS
                 jv_arg=$'\n'"    JV_VERSION = \"${JV_VERSION}\""
             fi
 
+            # DOCKER_BUILDX_VERSION is consumed by install-brik-prereqs.sh
+            # (run from every stack except deploy, which inherits the
+            # prereqs from brik-runner-base).
+            buildx_arg=""
+            if [[ "$stack" != "deploy" ]]; then
+                buildx_arg=$'\n'"    DOCKER_BUILDX_VERSION = \"${DOCKER_BUILDX_VERSION}\""
+            fi
+
             cat <<EOF
 target "${target_name}" {
   dockerfile = "images/${stack}/Dockerfile"
@@ -133,7 +142,7 @@ target "${target_name}" {
   args = {
     VERSION    = "${version}"
     YQ_VERSION = "${YQ_VERSION}"
-    JQ_VERSION = "${JQ_VERSION}"${jv_arg}${formatted_extra}
+    JQ_VERSION = "${JQ_VERSION}"${jv_arg}${buildx_arg}${formatted_extra}
   }
   platforms = ["linux/amd64", "linux/arm64"]
   tags = ${tags}

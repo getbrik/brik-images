@@ -51,6 +51,7 @@ ARG SEMGREP_VERSION=1.157.0
 ARG CHECKOV_VERSION=3.2.517
 ARG LICENSE_FINDER_VERSION=7.2.1
 ARG SCANCODE_VERSION=32.5.0
+ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-analysis"
@@ -74,7 +75,8 @@ ENV EXTRACTCODE_LIBARCHIVE_PATH=/usr/lib/libarchive.so.13 \
 
 # Brik prerequisites (yq, jq, git, docker-cli)
 ENV YQ_VERSION=${YQ_VERSION} \
-    JQ_VERSION=${JQ_VERSION}
+    JQ_VERSION=${JQ_VERSION} \
+    DOCKER_BUILDX_VERSION=${DOCKER_BUILDX_VERSION}
 
 COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
 RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh

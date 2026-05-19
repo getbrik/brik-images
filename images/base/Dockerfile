@@ -28,6 +28,7 @@ FROM alpine:${VERSION}
 ARG YQ_VERSION=v4.53.2
 ARG JQ_VERSION=1.8.1
 ARG JV_VERSION
+ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-base"
@@ -39,7 +40,8 @@ RUN apk add --no-cache bash git curl ca-certificates
 
 ENV YQ_VERSION=${YQ_VERSION} \
     JQ_VERSION=${JQ_VERSION} \
-    JV_VERSION=${JV_VERSION}
+    JV_VERSION=${JV_VERSION} \
+    DOCKER_BUILDX_VERSION=${DOCKER_BUILDX_VERSION}
 
 COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
 RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh

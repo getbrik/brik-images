@@ -13,6 +13,7 @@ ARG GITLEAKS_VERSION=8.30.1
 ARG TRUFFLEHOG_VERSION=3.94.3
 ARG DOCKLE_VERSION=0.4.15
 ARG CYCLONEDX_CLI_VERSION=0.31.0
+ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-scanner"
@@ -31,7 +32,8 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 
 # Brik prerequisites (yq, jq, git, docker-cli)
 ENV YQ_VERSION=${YQ_VERSION} \
-    JQ_VERSION=${JQ_VERSION}
+    JQ_VERSION=${JQ_VERSION} \
+    DOCKER_BUILDX_VERSION=${DOCKER_BUILDX_VERSION}
 
 COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
 RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh
