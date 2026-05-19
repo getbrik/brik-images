@@ -2,8 +2,8 @@
 ARG VERSION=21
 FROM eclipse-temurin:${VERSION}-jdk-jammy
 
-ARG YQ_VERSION=v4.53.2
-ARG JQ_VERSION=1.8.1
+ARG YQ_VERSION
+ARG JQ_VERSION
 ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"

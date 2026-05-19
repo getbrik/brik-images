@@ -1,6 +1,6 @@
 # brik-runner-base - Alpine with Brik prerequisites
 ARG VERSION=3.23@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659
-ARG JV_VERSION=v0.7.0
+ARG JV_VERSION
 
 # ---------------------------------------------------------------------------
 # Stage 1: build jv (santhosh-tekuri/jsonschema CLI) from source.
@@ -25,8 +25,8 @@ RUN apk add --no-cache git \
 # ---------------------------------------------------------------------------
 FROM alpine:${VERSION}
 
-ARG YQ_VERSION=v4.53.2
-ARG JQ_VERSION=1.8.1
+ARG YQ_VERSION
+ARG JQ_VERSION
 ARG JV_VERSION
 ARG DOCKER_BUILDX_VERSION
 

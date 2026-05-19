@@ -2,8 +2,8 @@
 ARG VERSION=10.0@sha256:f061e5a7532b36fa1d1b684857fe1f504ba92115b9934f154643266613c44c62
 FROM mcr.microsoft.com/dotnet/sdk:${VERSION}
 
-ARG YQ_VERSION=v4.53.2
-ARG JQ_VERSION=1.8.1
+ARG YQ_VERSION
+ARG JQ_VERSION
 ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"

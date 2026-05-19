@@ -3,9 +3,9 @@
 # hadolint ignore=DL3007
 FROM ghcr.io/getbrik/brik-runner-base:latest
 
-ARG HELM_VERSION=v4.1.3
-ARG KUBECTL_VERSION=v1.35.3
-ARG ARGOCD_VERSION=v3.3.6
+ARG HELM_VERSION
+ARG KUBECTL_VERSION
+ARG ARGOCD_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-deploy"
