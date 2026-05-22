@@ -8,6 +8,8 @@
 </p>
 
 [![Build](https://github.com/getbrik/brik-images/actions/workflows/build.yml/badge.svg)](https://github.com/getbrik/brik-images/actions/workflows/build.yml)
+[![Build provenance](https://img.shields.io/badge/build%20provenance-attested-brightgreen?logo=github)](https://github.com/getbrik/brik-images/attestations)
+[![Signed with cosign](https://img.shields.io/badge/cosign-signed-blue?logo=sigstore)](#security)
 
 Official Docker images for [Brik](https://github.com/getbrik/brik) CI/CD runners.
 
