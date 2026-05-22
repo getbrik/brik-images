@@ -19,6 +19,13 @@ permissions:
 env:
   REGISTRY: ghcr.io/getbrik
 
+# Serialize build.yml runs (push-triggered and the scheduled-rebuild
+# reusable call) so concurrent runs cannot race on the update-badges
+# git push.
+concurrency:
+  group: build-and-push-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   lint:
     name: Lint Dockerfiles
