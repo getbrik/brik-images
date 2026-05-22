@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "0 3 * * 1"  # Monday 3:00 UTC
   workflow_dispatch:
+    inputs:
+      cleanup_dry_run:
+        description: "Run the package cleanup in dry-run mode (no deletions)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -15,3 +20,36 @@ jobs:
   rebuild:
     name: Rebuild all images
     uses: ./.github/workflows/build.yml
+
+  cleanup:
+    name: Prune obsolete package versions
+    needs: rebuild
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Prune untagged and stale GHCR versions
+        uses: dataaxiom/ghcr-cleanup-action@v1.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: getbrik
+          # Keep this list in sync with the stacks declared in versions.json.
+          packages: brik-runner-base,brik-runner-node,brik-runner-python,brik-runner-java,brik-runner-rust,brik-runner-dotnet,brik-runner-analysis,brik-runner-scanner,brik-runner-deploy
+          # Remove orphaned digests left when a tag is overwritten by a
+          # newer build. Multi-arch aware: the platform children of a live
+          # tagged manifest list are not treated as deletable orphans.
+          delete-untagged: true
+          # Keep the 20 most recent tagged versions per package. The current
+          # version tags always sit on the newest digests, so they survive;
+          # only stale sha-<commit> images beyond the 20 newest are trimmed.
+          keep-n-tagged: 20
+          # Belt-and-suspenders: never delete the `latest` tag.
+          exclude-tags: latest
+          # Clean up broken multi-arch manifests and orphaned cosign /
+          # attestation artifacts whose subject image is gone.
+          delete-ghost-images: true
+          delete-partial-images: true
+          delete-orphaned-images: true
+          # Post-run check that every remaining multi-arch manifest is intact.
+          validate: true
+          dry-run: ${{ inputs.cleanup_dry_run || false }}
