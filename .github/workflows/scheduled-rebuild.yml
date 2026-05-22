@@ -37,27 +37,18 @@ jobs:
     permissions:
       packages: write
     steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
       - name: Prune untagged and stale GHCR versions
-        uses: dataaxiom/ghcr-cleanup-action@374e2028c8fb93b7219f3771cd405fab95d3dec4 # v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          owner: getbrik
+        # In-repo script rather than dataaxiom/ghcr-cleanup-action: that
+        # action fatally errors on the 404 a DELETE returns when its target
+        # was already removed by a manifest cascade. The script treats a 404
+        # as success (the version is already gone).
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG: getbrik
           # Keep this list in sync with the stacks declared in versions.json.
-          packages: brik-runner-base,brik-runner-node,brik-runner-python,brik-runner-java,brik-runner-rust,brik-runner-dotnet,brik-runner-analysis,brik-runner-scanner,brik-runner-deploy
-          # Remove orphaned digests left when a tag is overwritten by a
-          # newer build. Multi-arch aware: the platform children of a live
-          # tagged manifest list are not treated as deletable orphans.
-          delete-untagged: true
-          # Keep the 20 most recent tagged versions per package. The current
-          # version tags always sit on the newest digests, so they survive;
-          # only stale sha-<commit> images beyond the 20 newest are trimmed.
-          keep-n-tagged: 20
-          # Belt-and-suspenders: never delete the `latest` tag.
-          exclude-tags: latest
-          # delete-ghost/partial/orphaned-images are deliberately omitted:
-          # their pre-computed referrer deletions race GHCR cascade deletion
-          # and fail the job on a 404. delete-untagged plus the cascade
-          # already remove the orphaned cosign / attestation referrers.
-          # Post-run check that every remaining multi-arch manifest is intact.
-          validate: true
-          dry-run: ${{ inputs.cleanup_dry_run || false }}
+          PACKAGES: brik-runner-base,brik-runner-node,brik-runner-python,brik-runner-java,brik-runner-rust,brik-runner-dotnet,brik-runner-analysis,brik-runner-scanner,brik-runner-deploy
+          KEEP_N_SHA: "20"
+          DRY_RUN: ${{ inputs.cleanup_dry_run || false }}
+        run: ./scripts/cleanup-ghcr.sh
