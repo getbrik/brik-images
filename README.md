@@ -40,7 +40,7 @@ Every image is scanned, signed, and continuously rebuilt:
 - Scan results are uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full per-image visibility.
 - SBOMs are generated with [Syft](https://github.com/anchore/syft) in CycloneDX format.
 - Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC).
-- Weekly rebuilds pick up base-image security patches; [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates.
+- Every build applies the base image's pending OS security updates (`apt-get upgrade`); weekly rebuilds also refresh the base images, and [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates.
 
 ### Current CVE posture
 
@@ -48,7 +48,7 @@ Every image is scanned, signed, and continuously rebuilt:
 
 **What we control:** the bundled tools (`yq`, `jq`, `git`, and the scanner/analysis binaries) are pinned to current releases and bumped regularly; the build blocks on a Critical that has a fix.
 
-**What we don't control:** CVEs inside the upstream base images and statically-linked Go binaries -- they clear only when upstream ships a patched release. Weekly rebuilds pull those in automatically. For production use, pin images by digest and run a scan gate against your own risk policy.
+**What we don't control:** CVEs in the language runtimes themselves and in statically-linked Go binaries -- those clear only when the runtime or tool upstream ships a patched release. For production use, pin images by digest and run a scan gate against your own risk policy.
 
 ### Suppressed CVEs (read this)
 

@@ -50,6 +50,41 @@ detect_pkg_manager() {
 }
 
 # ---------------------------------------------------------------------------
+# Apply pending OS security updates
+# ---------------------------------------------------------------------------
+# The base images (node:*-slim, python:*-slim, rust:*-slim-bookworm,
+# dotnet/sdk, eclipse-temurin) lag the distro security feed: a patched
+# package can sit in <suite>-security for days before the base image is
+# itself rebuilt. The Grype gate fails the build on a Critical CVE that
+# already has a fix, so pull those fixes in at build time instead of
+# waiting for the upstream base-image rebuild.
+upgrade_os_packages() {
+    local mgr
+    mgr="$(detect_pkg_manager)"
+    case "$mgr" in
+        apt-get)
+            log "applying OS security updates (apt-get upgrade)"
+            apt-get update -qq \
+                && apt-get upgrade -y -qq \
+                && rm -rf /var/lib/apt/lists/*
+            ;;
+        apk)
+            log "applying OS security updates (apk upgrade)"
+            apk upgrade --no-cache
+            ;;
+        yum)
+            yum upgrade -y && yum clean all
+            ;;
+        dnf)
+            dnf upgrade -y && dnf clean all
+            ;;
+        *)
+            log "no package manager detected -- skipping OS updates"
+            ;;
+    esac
+}
+
+# ---------------------------------------------------------------------------
 # Install git if missing
 # ---------------------------------------------------------------------------
 
@@ -258,6 +293,7 @@ main() {
     log "  JQ_VERSION=${JQ_VERSION}"
     log "  DOCKER_BUILDX_VERSION=${DOCKER_BUILDX_VERSION}"
 
+    upgrade_os_packages
     install_curl
     install_git
     install_yq
