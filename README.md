@@ -34,22 +34,21 @@ All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
 ## Security
 
-- Images are scanned with [Grype](https://github.com/anchore/grype) on every build (blocks on **critical** CVEs with available fixes)
-- Scan results are uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full visibility
-- SBOMs are generated with [Syft](https://github.com/anchore/syft) in CycloneDX format
-- Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC)
-- Weekly rebuilds pick up base image security patches
-- [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates
+Every image is scanned, signed, and continuously rebuilt:
 
-### Security policy
+- Scanned with [Grype](https://github.com/anchore/grype) on every build. The build **hard-fails only on a Critical CVE that has an available upstream fix** -- Critical and High CVEs that upstream has not patched yet are recorded, not blocked.
+- Scan results are uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full per-image visibility.
+- SBOMs are generated with [Syft](https://github.com/anchore/syft) in CycloneDX format.
+- Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC).
+- Weekly rebuilds pick up base-image security patches; [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates.
 
-These images bundle the latest available versions of their respective base images and tools (yq, jq, git). Some upstream base images (e.g. `node:22-slim`, `python:3.13-slim`) may contain known vulnerabilities that have not yet been patched by their maintainers.
+### Current CVE posture
 
-**What we control:** yq, jq, and git versions are pinned to the latest releases and updated regularly. The build fails on any **critical** CVE with an available fix.
+**These images are not CVE-free.** They bundle the latest upstream base images (`node:*-slim`, `python:*-slim`, Debian, Alpine, ...), and those carry vulnerabilities their maintainers have not patched yet. Several stack images currently show **Critical** CVEs, and every non-base image shows dozens of **High** -- the per-image badge in the [Available Images](#available-images) table is the live count, and the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) the per-CVE detail. Treat those, not this prose, as the source of truth.
 
-**What we don't control:** CVEs in the upstream base images (Alpine, Debian, Ubuntu). These are resolved when the upstream maintainers publish updated images. Weekly rebuilds automatically pick up new patches.
+**What we control:** the bundled tools (`yq`, `jq`, `git`, and the scanner/analysis binaries) are pinned to current releases and bumped regularly; the build blocks on a Critical that has a fix.
 
-Check the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for the current scan results of every image.
+**What we don't control:** CVEs inside the upstream base images and statically-linked Go binaries -- they clear only when upstream ships a patched release. Weekly rebuilds pull those in automatically. For production use, pin images by digest and run a scan gate against your own risk policy.
 
 ### Suppressed CVEs (read this)
 
