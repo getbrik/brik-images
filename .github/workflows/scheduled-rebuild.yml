@@ -52,11 +52,10 @@ jobs:
           keep-n-tagged: 20
           # Belt-and-suspenders: never delete the `latest` tag.
           exclude-tags: latest
-          # Clean up broken multi-arch manifests and orphaned cosign /
-          # attestation artifacts whose subject image is gone.
-          delete-ghost-images: true
-          delete-partial-images: true
-          delete-orphaned-images: true
+          # delete-ghost/partial/orphaned-images are deliberately omitted:
+          # their pre-computed referrer deletions race GHCR cascade deletion
+          # and fail the job on a 404. delete-untagged plus the cascade
+          # already remove the orphaned cosign / attestation referrers.
           # Post-run check that every remaining multi-arch manifest is intact.
           validate: true
           dry-run: ${{ inputs.cleanup_dry_run || false }}
