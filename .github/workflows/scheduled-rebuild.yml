@@ -19,11 +19,17 @@ permissions:
 jobs:
   rebuild:
     name: Rebuild all images
+    # A dry-run dispatch skips the ~20-min rebuild so the cleanup can be
+    # tested on its own; the scheduled run and real dispatches still rebuild.
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.cleanup_dry_run) }}
     uses: ./.github/workflows/build.yml
 
   cleanup:
     name: Prune obsolete package versions
     needs: rebuild
+    # Run after a successful rebuild, or after a skipped one (dry-run dispatch);
+    # do not run if the rebuild failed.
+    if: ${{ always() && needs.rebuild.result != 'failure' && needs.rebuild.result != 'cancelled' }}
     runs-on: ubuntu-latest
     permissions:
       packages: write
