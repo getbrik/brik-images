@@ -128,6 +128,55 @@
       "depNameTemplate": "goodwithtech/dockle",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "docker buildx version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"docker_buildx\":\\s*\"(?<currentValue>v[^\"]+)\""],
+      "depNameTemplate": "docker/buildx",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "jv (cmd/jv module) version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"jv\":\\s*\"(?<currentValue>v[^\"]+)\""],
+      "depNameTemplate": "github.com/santhosh-tekuri/jsonschema/cmd/jv",
+      "datasourceTemplate": "go"
+    },
+    {
+      "customType": "regex",
+      "description": "helm version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"helm\":\\s*\"(?<currentValue>v[^\"]+)\""],
+      "depNameTemplate": "helm/helm",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "kubectl version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"kubectl\":\\s*\"(?<currentValue>v[^\"]+)\""],
+      "depNameTemplate": "kubernetes/kubernetes",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "argocd version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"argocd\":\\s*\"(?<currentValue>v[^\"]+)\""],
+      "depNameTemplate": "argoproj/argo-cd",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "description": "cyclonedx-cli version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"cyclonedx_cli\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "CycloneDX/cyclonedx-cli",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
     }
   ]
 }
