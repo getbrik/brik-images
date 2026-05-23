@@ -32,11 +32,11 @@ ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-base"
-LABEL org.opencontainers.image.description="Brik CI runner base image with bash, yq, jq, jv, git"
+LABEL org.opencontainers.image.description="Brik CI runner base image with bash, yq, jq, jv, git, glow"
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
-RUN apk add --no-cache bash git curl ca-certificates
+RUN apk add --no-cache bash git curl ca-certificates glow
 
 ENV YQ_VERSION=${YQ_VERSION} \
     JQ_VERSION=${JQ_VERSION} \
@@ -53,4 +53,4 @@ COPY --from=jv-builder /jv /usr/local/bin/jv
 RUN echo "brik-runner" > /.brik-runner
 
 # Verify prerequisites
-RUN yq --version && jq --version && jv --version && git --version && bash --version
+RUN yq --version && jq --version && jv --version && git --version && bash --version && glow --version
