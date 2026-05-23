@@ -133,6 +133,7 @@ jobs:
           echo "jq_version=$(jq -r '.tools.jq' versions.json)" >> "$GITHUB_OUTPUT"
           echo "jv_version=$(jq -r '.tools.jv' versions.json)" >> "$GITHUB_OUTPUT"
           echo "docker_buildx_version=$(jq -r '.tools.docker_buildx' versions.json)" >> "$GITHUB_OUTPUT"
+          echo "glow_version=$(jq -r '.tools.glow' versions.json)" >> "$GITHUB_OUTPUT"
 
           # Read deploy_tools versions (used by deploy image)
           for key in $(jq -r '.deploy_tools | keys[]' versions.json); do
@@ -176,6 +177,7 @@ jobs:
           ARGS=""
           if [ "${{ matrix.stack }}" = "base" ]; then
             ARGS="JV_VERSION=${{ steps.versions.outputs.jv_version }}"
+            ARGS="${ARGS}\nGLOW_VERSION=${{ steps.versions.outputs.glow_version }}"
           elif [ "${{ matrix.stack }}" = "analysis" ]; then
             ARGS="SEMGREP_VERSION=${{ steps.versions.outputs.semgrep_version }}"
             ARGS="${ARGS}\nCHECKOV_VERSION=${{ steps.versions.outputs.checkov_version }}"

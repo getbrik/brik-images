@@ -4,7 +4,8 @@
     "yq": "v4.53.2",
     "jq": "1.8.1",
     "jv": "v0.7.0",
-    "docker_buildx": "v0.34.1"
+    "docker_buildx": "v0.34.1",
+    "glow": "v2.1.2"
   },
   "deploy_tools": {
     "helm": "v4.2.0",

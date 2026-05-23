@@ -25,11 +25,11 @@ RUN apk add --no-cache git \
 # ---------------------------------------------------------------------------
 FROM alpine:${VERSION}
 
-ARG VERSION
 ARG YQ_VERSION
 ARG JQ_VERSION
 ARG JV_VERSION
 ARG DOCKER_BUILDX_VERSION
+ARG GLOW_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-base"
@@ -37,13 +37,25 @@ LABEL org.opencontainers.image.description="Brik CI runner base image with bash,
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
-# glow lives in Alpine's community repo (since v3.20). The official
-# alpine:${VERSION} image only enables main, so we add community via
-# --repository for this single install. The URL tracks the same Alpine
-# version as the base image to keep the package set consistent.
-RUN apk add --no-cache \
-    --repository=https://dl-cdn.alpinelinux.org/alpine/v${VERSION}/community \
-    bash git curl ca-certificates glow
+RUN apk add --no-cache bash git curl ca-certificates
+
+# glow is not packaged in Alpine main/community (only edge/testing,
+# which is too volatile for a pinned base image). Install the upstream
+# GitHub release tarball instead. The version is pinned via build-arg
+# fed from versions.json (.tools.glow). curl + tar are split so a
+# curl HTTP failure surfaces immediately (no piping into tar, which
+# would silently succeed on truncated input).
+RUN GLOW_VER="${GLOW_VERSION#v}" \
+ && ARCH=$(uname -m) \
+ && case "$ARCH" in \
+        x86_64)  GARCH="x86_64" ;; \
+        aarch64) GARCH="arm64"  ;; \
+        *)       echo "unsupported arch: $ARCH" >&2; exit 1 ;; \
+    esac \
+ && curl -fsSL -o /tmp/glow.tar.gz "https://github.com/charmbracelet/glow/releases/download/v${GLOW_VER}/glow_${GLOW_VER}_Linux_${GARCH}.tar.gz" \
+ && tar -xzf /tmp/glow.tar.gz -C /tmp \
+ && install -m 0755 "/tmp/glow_${GLOW_VER}_Linux_${GARCH}/glow" /usr/local/bin/glow \
+ && rm -rf "/tmp/glow.tar.gz" "/tmp/glow_${GLOW_VER}_Linux_${GARCH}"
 
 ENV YQ_VERSION=${YQ_VERSION} \
     JQ_VERSION=${JQ_VERSION} \
