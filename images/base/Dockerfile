@@ -25,6 +25,7 @@ RUN apk add --no-cache git \
 # ---------------------------------------------------------------------------
 FROM alpine:${VERSION}
 
+ARG VERSION
 ARG YQ_VERSION
 ARG JQ_VERSION
 ARG JV_VERSION
@@ -36,7 +37,13 @@ LABEL org.opencontainers.image.description="Brik CI runner base image with bash,
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
-RUN apk add --no-cache bash git curl ca-certificates glow
+# glow lives in Alpine's community repo (since v3.20). The official
+# alpine:${VERSION} image only enables main, so we add community via
+# --repository for this single install. The URL tracks the same Alpine
+# version as the base image to keep the package set consistent.
+RUN apk add --no-cache \
+    --repository=https://dl-cdn.alpinelinux.org/alpine/v${VERSION}/community \
+    bash git curl ca-certificates glow
 
 ENV YQ_VERSION=${YQ_VERSION} \
     JQ_VERSION=${JQ_VERSION} \
