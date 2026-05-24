@@ -3,8 +3,9 @@
 </p>
 
 <p align="center">
-  <b>Brik, the portable pipeline standard.</b><br>
-  <b>Write once. Run everywhere.</b>
+  <b>CI runner images, built for Brik.</b><br>
+  Pre-installed bash + yq + jq + git + your stack toolchain. Signed, attested, scanned, multi-arch.<br>
+  <i>Stop bootstrapping every CI job.</i>
 </p>
 
 [![Build](https://github.com/getbrik/brik-images/actions/workflows/build.yml/badge.svg)](https://github.com/getbrik/brik-images/actions/workflows/build.yml)
@@ -13,9 +14,78 @@
 
 Official Docker images for [Brik](https://github.com/getbrik/brik) CI/CD runners.
 
-Pre-built images with all Brik prerequisites (bash 5+, yq, jq, git) and stack-specific tools. Eliminates the ~30-40s bootstrap overhead from every CI job.
+## The problem these images solve
 
-## Available Images
+Stock language images (`node:24-slim`, `python:3.13-slim`) are great for development. They are not built for CI:
+
+- Every CI job re-installs the same `bash 5+`, `yq`, `jq`, `git`, `curl`. 30 to 40 seconds, every job, every pipeline.
+- No signature, no attestation, no SBOM. You take the maintainer's word for what is inside.
+- CVE patches lag. Stock images rebuild on the maintainer's cadence, not yours.
+- No CI-specific tooling. SAST, SCA, secret scanning, container linting -- you bring your own and install per job.
+
+brik-images are CI runner images. Bootstrap is gone. Provenance is signed. CVE posture is published live, per image, on every push. Scanner and analysis tools come pre-installed in dedicated images.
+
+## What makes these images different
+
+### 🔐 Signed and attested
+
+Every image is signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC) and carries a SLSA build-provenance attestation you can verify with `gh attestation verify`. No supply chain trust gap. See [Verifying](#verifying) for the exact commands.
+
+### 🔍 Honestly scanned
+
+Live CVE counts in the [Available images](#available-images) table, not a static "0 vulnerabilities" badge. The build hard-fails **only** on a Critical CVE that has an available upstream fix. Everything else is recorded, visible in the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning), and treated as known posture rather than hidden risk. The full posture is documented in [Current CVE posture](#current-cve-posture).
+
+### 🔄 Continuously rebuilt
+
+Every build applies the base image's pending OS security updates (`apt-get upgrade`). Weekly rebuilds refresh base images. [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates. Suppressed CVEs are reviewed every Monday by an automated [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review) so nothing rots silently.
+
+### 🧱 Built for Brik
+
+`bash 5+`, `yq`, `jq`, `git`, `curl` are pre-installed in every image. Stack images add their toolchain. The Brik runtime itself is cloned at CI time by the shared library's `before_script`, which decouples image releases from Brik releases.
+
+## What's included
+
+Every image contains:
+
+- **bash** (5.x)
+- **yq** -- YAML processor
+- **jq** -- JSON processor
+- **git** -- version control
+- **curl** -- HTTP client
+
+Stack images additionally include their respective toolchain (node/npm, python/pip, java/maven, rust/cargo, dotnet/sdk). Exact pinned versions of every bundled tool are in [`versions.json`](versions.json).
+
+### Analysis vs scanner
+
+The scanning tooling is split into two images based on their runtime requirements:
+
+- **analysis** -- Python/Ruby runtime, for deep SAST analysis, license compliance, and IaC scanning.
+- **scanner** -- static Go binaries only, fast to pull, for vulnerability scanning, secret detection, Dockerfile linting, and container scanning.
+
+#### Analysis image (~1.7 GB)
+
+| Tool | Purpose |
+|------|---------|
+| semgrep | Static analysis (SAST) |
+| checkov | Infrastructure-as-Code scanning |
+| scancode-toolkit | License and origin detection |
+| license_finder | License compliance |
+
+#### Scanner image (~500 MB)
+
+| Tool | Purpose |
+|------|---------|
+| grype | Vulnerability scanning (SCA) |
+| syft | SBOM generation |
+| osv-scanner | Open-source vulnerability scanning |
+| hadolint | Dockerfile linting |
+| gitleaks | Secret/credential leak detection |
+| trufflehog | Secret scanning (entropy + patterns) |
+| dockle | Docker image best-practice linting |
+
+**Note**: the Brik runtime itself is NOT pre-installed. It is cloned at CI time by the shared library's `before_script`. This decouples image releases from Brik releases.
+
+## Available images
 
 | Image | Version | Security | Pull command |
 |-------|---------|----------|--------------|
@@ -38,11 +108,25 @@ All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
 Every image is scanned, signed, and continuously rebuilt:
 
-- Scanned with [Grype](https://github.com/anchore/grype) on every build. The build **hard-fails only on a Critical CVE that has an available upstream fix** -- Critical and High CVEs that upstream has not patched yet are recorded, not blocked.
-- Scan results are uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full per-image visibility.
-- SBOMs are generated with [Syft](https://github.com/anchore/syft) in CycloneDX format.
-- Images are signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC).
-- Every build applies the base image's pending OS security updates (`apt-get upgrade`); weekly rebuilds also refresh the base images, and [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates.
+- ✅ Scanned with [Grype](https://github.com/anchore/grype) on every build. The build **hard-fails only on a Critical CVE that has an available upstream fix** -- Critical and High CVEs that upstream has not patched yet are recorded, not blocked.
+- ✅ Scan results uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full per-image visibility.
+- ✅ SBOMs generated with [Syft](https://github.com/anchore/syft) in CycloneDX format.
+- ✅ Images signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC).
+- ✅ Every build applies the base image's pending OS security updates; weekly rebuilds refresh the base images; [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates.
+
+### Current CVE posture
+
+**These images are not CVE-free.** They bundle the latest upstream base images (`node:*-slim`, `python:*-slim`, Debian, Alpine), and those carry vulnerabilities their maintainers have not patched yet. Several stack images currently show **Critical** CVEs, and every non-base image shows dozens of **High** -- the per-image badge in the [Available images](#available-images) table is the live count, and the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) the per-CVE detail. Treat those, not this prose, as the source of truth.
+
+**What we control:** the bundled tools (`yq`, `jq`, `git`, and the scanner/analysis binaries) are pinned to current releases and bumped regularly; the build blocks on a Critical that has a fix.
+
+**What we don't control:** CVEs in the language runtimes themselves and in statically-linked Go binaries -- those clear only when the runtime or tool upstream ships a patched release. For production use, pin images by digest and run a scan gate against your own risk policy.
+
+### Suppressed CVEs (read this)
+
+A few CVEs are suppressed in [`.grype.yaml`](.grype.yaml) so the build can stay green: Go-toolchain vulnerabilities compiled into statically-linked scanner binaries (`dockle`, `gitleaks`, `osv-scanner`) that we cannot remediate without forking the upstream project. [`.grype.yaml`](.grype.yaml) is the canonical list.
+
+The **live status** -- the per-tool breakdown, and whether a patched upstream release is available yet -- is the auto-refreshed [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review), regenerated every Monday by [`scripts/review-cve-suppressions.sh`](scripts/review-cve-suppressions.sh). When a tool ships a release on a patched Go, bump it in [`versions.json`](versions.json) and drop its entry from `.grype.yaml` and [`.cve-suppressions.json`](.cve-suppressions.json).
 
 ### Verifying
 
@@ -60,21 +144,7 @@ gh attestation verify oci://ghcr.io/getbrik/brik-runner-node:24 --owner getbrik
 
 Every attestation is also listed on the [Attestations page](https://github.com/getbrik/brik-images/attestations).
 
-### Current CVE posture
-
-**These images are not CVE-free.** They bundle the latest upstream base images (`node:*-slim`, `python:*-slim`, Debian, Alpine, ...), and those carry vulnerabilities their maintainers have not patched yet. Several stack images currently show **Critical** CVEs, and every non-base image shows dozens of **High** -- the per-image badge in the [Available Images](#available-images) table is the live count, and the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) the per-CVE detail. Treat those, not this prose, as the source of truth.
-
-**What we control:** the bundled tools (`yq`, `jq`, `git`, and the scanner/analysis binaries) are pinned to current releases and bumped regularly; the build blocks on a Critical that has a fix.
-
-**What we don't control:** CVEs in the language runtimes themselves and in statically-linked Go binaries -- those clear only when the runtime or tool upstream ships a patched release. For production use, pin images by digest and run a scan gate against your own risk policy.
-
-### Suppressed CVEs (read this)
-
-A few CVEs are suppressed in [`.grype.yaml`](.grype.yaml) so the build can stay green: Go-toolchain vulnerabilities compiled into statically-linked scanner binaries (`dockle`, `gitleaks`, `osv-scanner`) that we cannot remediate without forking the upstream project. [`.grype.yaml`](.grype.yaml) is the canonical list.
-
-The **live status** -- the per-tool breakdown, and whether a patched upstream release is available yet -- is the auto-refreshed [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review), regenerated every Monday by [`scripts/review-cve-suppressions.sh`](scripts/review-cve-suppressions.sh). When a tool ships a release on a patched Go, bump it in [`versions.json`](versions.json) and drop its entry from `.grype.yaml` and [`.cve-suppressions.json`](.cve-suppressions.json).
-
-## Tag Convention
+## Tag convention
 
 Each image is published with multiple tags:
 
@@ -86,64 +156,6 @@ ghcr.io/getbrik/brik-runner-node:22@sha256:...    # digest pin (most secure)
 ```
 
 **For production pipelines**, pin images by digest (`@sha256:...`) to guarantee reproducible builds. Mutable tags like `:22` or `:latest` can change on rebuilds. Use `docker inspect --format='{{index .RepoDigests 0}}' <image>` to retrieve the current digest.
-
-## What's Included
-
-Every image contains:
-
-- **bash** (5.x)
-- **yq** - YAML processor
-- **jq** - JSON processor
-- **git** - version control
-- **curl** - HTTP client
-
-Stack images additionally include their respective toolchain (node/npm, python/pip, java/maven, etc.). Exact pinned versions of every bundled tool are in [`versions.json`](versions.json).
-
-### Analysis vs Scanner
-
-The scanning tooling is split into two images based on their runtime requirements:
-
-- **analysis** -- Python/Ruby runtime, for deep SAST analysis, license compliance, and IaC scanning (semgrep, checkov, scancode, license_finder)
-- **scanner** -- static Go binaries only, fast to pull, for vulnerability scanning, secret detection, Dockerfile linting, and container scanning
-
-### Analysis Image
-
-The `brik-runner-analysis` image (~1.7 GB) bundles Python/Ruby-based analysis tools via multi-stage build:
-
-| Tool | Purpose |
-|------|---------|
-| semgrep | Static analysis (SAST) |
-| checkov | Infrastructure-as-Code scanning |
-| scancode-toolkit | License and origin detection |
-| license_finder | License compliance |
-
-### Scanner Image
-
-The `brik-runner-scanner` image (~500 MB) bundles static Go binary tools -- no Python or Ruby runtime:
-
-| Tool | Purpose |
-|------|---------|
-| grype | Vulnerability scanning (SCA) |
-| syft | SBOM generation |
-| osv-scanner | Open-source vulnerability scanning |
-| hadolint | Dockerfile linting |
-| gitleaks | Secret/credential leak detection |
-| trufflehog | Secret scanning (entropy + patterns) |
-| dockle | Docker image best-practice linting |
-
-Pinned versions for all tools are in [`versions.json`](versions.json).
-
-**Note:** The brik runtime is NOT pre-installed. It is cloned at CI time by the shared library's `before_script`. This decouples image releases from brik releases.
-
-## Roadmap: Brik Runtime in Images
-
-Currently, the brik runtime is cloned at CI time by the shared library's `before_script`. This keeps image releases decoupled from brik development, which is the right trade-off during active development.
-
-Once brik reaches a stable release cadence, the runtime will be pre-installed in the images. This will unlock:
-
-- **Zero-config local usage** -- `docker run ghcr.io/getbrik/brik-runner-node:22 brik run stage build` with no setup, no clone, no CI platform required.
-- **Fully offline pipelines** -- images become self-contained, no network dependency at runtime.
-- **Freemium / Enterprise tiers** -- community images ship with brik core; enterprise images could include additional modules, caching layers, or premium integrations.
 
 ## Usage
 
@@ -206,7 +218,7 @@ jobs:
       - run: brik run stage build
 ```
 
-### Local Development
+### Local development
 
 ```bash
 docker run --rm -v "$(pwd):/workspace" -w /workspace \
@@ -214,9 +226,9 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
   brik run stage build
 ```
 
-## Building Locally
+## Building locally
 
-### Quick Start
+### Quick start
 
 ```bash
 # Build all images (multi-arch, no push)
@@ -232,7 +244,7 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
 ./scripts/build-local.sh --load analysis-1 scanner-1
 ```
 
-### build-local.sh Options
+### build-local.sh options
 
 | Option | Description |
 |--------|-------------|
@@ -266,7 +278,7 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
 ./scripts/build-local.sh --dry-run node java
 ```
 
-### Other Scripts
+### Other scripts
 
 ```bash
 # Generate the bake file from the version matrix
@@ -279,13 +291,17 @@ docker run --rm -v "$(pwd):/workspace" -w /workspace \
 hadolint images/*/Dockerfile
 ```
 
-## Version Matrix
+## Version matrix
 
 All tool and stack versions are defined in `versions.json` (single source of truth). To add or update a version:
 
 1. Edit `versions.json`
 2. Run `./scripts/generate-bake.sh` (or use `--regenerate` with `build-local.sh`)
 3. Commit and push -- CI handles the rest
+
+## Roadmap
+
+The Brik runtime is currently cloned at CI time by the shared library's `before_script`, keeping image releases decoupled from Brik development. Once Brik reaches a stable release cadence, the runtime will be pre-installed in the images. That will unlock zero-config local usage (`docker run ghcr.io/getbrik/brik-runner-node:22 brik run stage build`) and fully offline pipelines.
 
 ## License
 
