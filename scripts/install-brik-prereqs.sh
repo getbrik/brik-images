@@ -49,6 +49,45 @@ detect_pkg_manager() {
     echo ""
 }
 
+# Download a release binary into dest, failing loudly instead of baking a
+# corrupt "binary". GitHub release downloads occasionally return an
+# interstitial error page ("We couldn't respond to your request in time")
+# or a transient 5xx. Without --fail, curl writes that HTML to the output
+# file and exits 0; the page is then chmod +x'd and executed, producing a
+# baffling `syntax error near unexpected token '<'` and exit 2. Guard with:
+#   - --fail        : non-zero exit on HTTP >= 400
+#   - --retry*      : ride out transient 5xx / connection resets from the CDN
+#   - HTML sniff    : reject a 2xx-served error page that slips past --fail
+download_binary() {
+    local url="$1" dest="$2" tmp first
+    tmp="$(mktemp)"
+
+    if ! curl -fsSL --retry 5 --retry-delay 3 --retry-connrefused \
+        --retry-all-errors -o "$tmp" "$url"; then
+        rm -f "$tmp"
+        log "ERROR: download failed: $url"
+        return 1
+    fi
+
+    if [[ ! -s "$tmp" ]]; then
+        rm -f "$tmp"
+        log "ERROR: downloaded an empty file from $url"
+        return 1
+    fi
+
+    # A real binary starts with a non-printable magic byte (ELF 0x7f,
+    # Mach-O 0xcf/0xfe). A leading '<' means an HTML/XML error page.
+    first="$(head -c 64 "$tmp" | tr -d '[:space:]' | head -c 1)"
+    if [[ "$first" == "<" ]]; then
+        rm -f "$tmp"
+        log "ERROR: $url returned an HTML/error page, not a binary"
+        return 1
+    fi
+
+    install -m 0755 "$tmp" "$dest"
+    rm -f "$tmp"
+}
+
 # ---------------------------------------------------------------------------
 # Apply pending OS security updates
 # ---------------------------------------------------------------------------
@@ -164,8 +203,7 @@ install_yq() {
     local url="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_${os}_${arch}"
 
     log "installing yq ${YQ_VERSION} (${os}/${arch})"
-    curl -sSL -o /usr/local/bin/yq "$url"
-    chmod +x /usr/local/bin/yq
+    download_binary "$url" /usr/local/bin/yq
     yq --version
     log "yq installed"
 }
@@ -187,8 +225,7 @@ install_jq() {
     local url="https://github.com/jqlang/jq/releases/download/jq-${JQ_VERSION}/jq-${os}-${arch}"
 
     log "installing jq ${JQ_VERSION} (${os}/${arch})"
-    curl -sSL -o /usr/local/bin/jq "$url"
-    chmod +x /usr/local/bin/jq
+    download_binary "$url" /usr/local/bin/jq
     jq --version
     log "jq installed"
 }
@@ -277,8 +314,7 @@ install_docker_buildx() {
 
     log "installing docker buildx ${DOCKER_BUILDX_VERSION} (${os}/${arch})"
     mkdir -p "$plugin_dir"
-    curl -sSL -o "$plugin_path" "$url"
-    chmod +x "$plugin_path"
+    download_binary "$url" "$plugin_path"
     docker buildx version
     log "docker buildx installed"
 }
