@@ -32,17 +32,40 @@ ignore:
   # permission-enforcement bypasses. Statically linked into docker-buildx
   # v0.34.1 (latest, ships x/crypto v0.50.0). No patched buildx release
   # exists yet -- remove these once upstream rebuilds with x/crypto >= 0.52.0.
-  - vulnerability: CVE-2026-39830   # GO-2026-5017
-  - vulnerability: CVE-2026-39831   # GO-2026-5019
-  - vulnerability: CVE-2026-39832   # GO-2026-5006
-  - vulnerability: CVE-2026-39833   # GO-2026-5005
-  - vulnerability: CVE-2026-39834   # GO-2026-5020
-  - vulnerability: CVE-2026-42508   # GO-2026-5021
-  - vulnerability: CVE-2026-46595   # GO-2026-5023
+  # Grype's Go-module matcher keys these by their GO-2026-* id, not the CVE.
+  - vulnerability: GO-2026-5005   # CVE-2026-39833
+  - vulnerability: GO-2026-5006   # CVE-2026-39832
+  - vulnerability: GO-2026-5017   # CVE-2026-39830
+  - vulnerability: GO-2026-5019   # CVE-2026-39831
+  - vulnerability: GO-2026-5020   # CVE-2026-39834
+  - vulnerability: GO-2026-5021   # CVE-2026-42508
+  - vulnerability: GO-2026-5023   # CVE-2026-46595
 
   # golang.org/x/net < 0.55.0 (idna): failure to reject ASCII-only
   # Punycode-encoded labels. Statically linked into docker-buildx v0.34.1
   # (x/net v0.53.0) and glow v2.1.2 (x/net v0.40.0) -- both latest, no
   # patched release. yq is fixed by the v4.53.3 bump and needs no ignore.
   # Remove once buildx and glow rebuild with x/net >= 0.55.0.
-  - vulnerability: CVE-2026-39821   # GO-2026-5026
+  - vulnerability: GO-2026-5026   # CVE-2026-39821
+
+  # CVE-2026-7210: CPython Expat hash-flooding (insufficient entropy in
+  # xml.parsers.expat / xml.etree.ElementTree) -- a DoS via crafted XML.
+  # Affects python:3.13 (3.13.13) and python:3.14 (3.14.5). The only fix
+  # grype knows is 3.15.0b2 (a beta) -- there is no stable 3.13.x/3.14.x
+  # backport to rebase onto yet, and the practical risk on a CI runner
+  # image (no untrusted XML parsing service) is low. Remove once a stable
+  # Python point release backports the fix.
+  - vulnerability: CVE-2026-7210
+
+  # github.com/moby/buildkit < 0.28.1 (CVE-2026-33747): a malicious build
+  # frontend can escape the storage root. Statically linked into
+  # docker-buildx v0.34.1 (latest). Remove once buildx bundles buildkit
+  # >= 0.28.1.
+  - vulnerability: GO-2026-4858   # CVE-2026-33747
+
+  # Go stdlib CVEs in upstream scanner/deploy binaries compiled with an
+  # older Go. Already listed above by CVE id, but Grype's go-module matcher
+  # also reports them under their GO-* id on statically linked binaries,
+  # which the CVE rule does not catch. Remove once upstream rebuilds.
+  - vulnerability: GO-2025-3563   # CVE-2025-22871 (net/http smuggling)
+  - vulnerability: GO-2026-4337   # CVE-2025-68121 (crypto/tls resumption)
