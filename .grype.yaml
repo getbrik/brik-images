@@ -27,3 +27,22 @@ ignore:
   # yq v4.52.5 was also affected and has been bumped to v4.53.2 which
   # ships a patched Go (no longer needs an ignore once images rebuild).
   - vulnerability: CVE-2026-27143
+
+  # golang.org/x/crypto < 0.52.0 (ssh, ssh/agent): key-constraint and
+  # permission-enforcement bypasses. Statically linked into docker-buildx
+  # v0.34.1 (latest, ships x/crypto v0.50.0). No patched buildx release
+  # exists yet -- remove these once upstream rebuilds with x/crypto >= 0.52.0.
+  - vulnerability: CVE-2026-39830   # GO-2026-5017
+  - vulnerability: CVE-2026-39831   # GO-2026-5019
+  - vulnerability: CVE-2026-39832   # GO-2026-5006
+  - vulnerability: CVE-2026-39833   # GO-2026-5005
+  - vulnerability: CVE-2026-39834   # GO-2026-5020
+  - vulnerability: CVE-2026-42508   # GO-2026-5021
+  - vulnerability: CVE-2026-46595   # GO-2026-5023
+
+  # golang.org/x/net < 0.55.0 (idna): failure to reject ASCII-only
+  # Punycode-encoded labels. Statically linked into docker-buildx v0.34.1
+  # (x/net v0.53.0) and glow v2.1.2 (x/net v0.40.0) -- both latest, no
+  # patched release. yq is fixed by the v4.53.3 bump and needs no ignore.
+  # Remove once buildx and glow rebuild with x/net >= 0.55.0.
+  - vulnerability: CVE-2026-39821   # GO-2026-5026
