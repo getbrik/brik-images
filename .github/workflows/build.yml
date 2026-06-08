@@ -60,6 +60,14 @@ jobs:
         with:
           dockerfile: images/deploy/Dockerfile
 
+  cve-suppressions-sync:
+    name: CVE suppressions in sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      - name: Check .grype.yaml and .cve-suppressions.json are in lockstep
+        run: ./scripts/check-cve-suppressions-sync.sh
+
   generate-matrix:
     name: Generate Build Matrix
     runs-on: ubuntu-latest
