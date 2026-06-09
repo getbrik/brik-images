@@ -411,6 +411,12 @@ jobs:
             value=$(jq -r ".deploy_tools.\"${key}\"" versions.json)
             echo "${key}_version=${value}" >> "$GITHUB_OUTPUT"
           done
+          # Evidence tools (cosign, oras): the deploy image verifies the signed
+          # attestation on the resolved digest before deploying.
+          for key in $(jq -r '.evidence_tools | keys[]' versions.json); do
+            value=$(jq -r ".evidence_tools.\"${key}\"" versions.json)
+            echo "${key}_version=${value}" >> "$GITHUB_OUTPUT"
+          done
 
           first=$(jq -r ".stacks.\"${{ matrix.stack }}\".versions[0]" versions.json)
           if [ "$first" = "${{ matrix.version }}" ]; then
@@ -449,6 +455,8 @@ jobs:
             HELM_VERSION=${{ steps.versions.outputs.helm_version }}
             KUBECTL_VERSION=${{ steps.versions.outputs.kubectl_version }}
             ARGOCD_VERSION=${{ steps.versions.outputs.argocd_version }}
+            COSIGN_VERSION=${{ steps.versions.outputs.cosign_version }}
+            ORAS_VERSION=${{ steps.versions.outputs.oras_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -465,6 +473,8 @@ jobs:
             HELM_VERSION=${{ steps.versions.outputs.helm_version }}
             KUBECTL_VERSION=${{ steps.versions.outputs.kubectl_version }}
             ARGOCD_VERSION=${{ steps.versions.outputs.argocd_version }}
+            COSIGN_VERSION=${{ steps.versions.outputs.cosign_version }}
+            ORAS_VERSION=${{ steps.versions.outputs.oras_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
