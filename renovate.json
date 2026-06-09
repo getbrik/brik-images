@@ -177,6 +177,24 @@
       "depNameTemplate": "CycloneDX/cyclonedx-cli",
       "datasourceTemplate": "github-releases",
       "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "cosign version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"cosign\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "sigstore/cosign",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "description": "oras version in versions.json",
+      "fileMatch": ["^versions\\.json$"],
+      "matchStrings": ["\"oras\":\\s*\"(?<currentValue>[^\"]+)\""],
+      "depNameTemplate": "oras-project/oras",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
     }
   ]
 }

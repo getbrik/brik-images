@@ -1,5 +1,6 @@
 # brik-runner-scanner - Security scanning tools (static Go binaries)
-# Contains: grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle
+# Contains: grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle,
+#           cyclonedx-cli, cosign, oras
 ARG VERSION
 FROM alpine:3.23
 
@@ -13,11 +14,13 @@ ARG GITLEAKS_VERSION
 ARG TRUFFLEHOG_VERSION
 ARG DOCKLE_VERSION
 ARG CYCLONEDX_CLI_VERSION
+ARG COSIGN_VERSION
+ARG ORAS_VERSION
 ARG DOCKER_BUILDX_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-scanner"
-LABEL org.opencontainers.image.description="Brik CI runner with scanning tools (grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle, cyclonedx-cli)"
+LABEL org.opencontainers.image.description="Brik CI runner with scanning tools (grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle, cyclonedx-cli, cosign, oras)"
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
@@ -61,3 +64,14 @@ RUN chmod +x /tmp/install-scanner-tools.sh && /tmp/install-scanner-tools.sh \
     && trufflehog --version \
     && dockle --version \
     && (test -x /usr/local/bin/cyclonedx-cli && cyclonedx-cli --version || echo "cyclonedx-cli skipped (no upstream musl-arm64); jq fallback handles SBOM merge")
+
+# Evidence tools (cosign, oras): sign the published image digest and attach
+# SBOM + provenance as OCI referrers after the container scan.
+ENV COSIGN_VERSION=${COSIGN_VERSION} \
+    ORAS_VERSION=${ORAS_VERSION}
+
+COPY scripts/install-evidence-tools.sh /tmp/install-evidence-tools.sh
+RUN chmod +x /tmp/install-evidence-tools.sh && /tmp/install-evidence-tools.sh \
+    && rm -rf /tmp/* /var/cache/apk/* \
+    && cosign version \
+    && oras version
