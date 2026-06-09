@@ -155,6 +155,12 @@ jobs:
             echo "${key}_version=${value}" >> "$GITHUB_OUTPUT"
           done
 
+          # Read evidence_tools versions (cosign, oras: scanner signs, deploy verifies)
+          for key in $(jq -r '.evidence_tools | keys[]' versions.json); do
+            value=$(jq -r ".evidence_tools.\"${key}\"" versions.json)
+            echo "${key}_version=${value}" >> "$GITHUB_OUTPUT"
+          done
+
           # Check if this version is first in the array (gets "latest" tag)
           first=$(jq -r ".stacks.\"${{ matrix.stack }}\".versions[0]" versions.json)
           if [ "$first" = "${{ matrix.version }}" ]; then
@@ -195,6 +201,8 @@ jobs:
             ARGS="HELM_VERSION=${{ steps.versions.outputs.helm_version }}"
             ARGS="${ARGS}\nKUBECTL_VERSION=${{ steps.versions.outputs.kubectl_version }}"
             ARGS="${ARGS}\nARGOCD_VERSION=${{ steps.versions.outputs.argocd_version }}"
+            ARGS="${ARGS}\nCOSIGN_VERSION=${{ steps.versions.outputs.cosign_version }}"
+            ARGS="${ARGS}\nORAS_VERSION=${{ steps.versions.outputs.oras_version }}"
           elif [ "${{ matrix.stack }}" = "scanner" ]; then
             ARGS="GRYPE_VERSION=${{ steps.versions.outputs.grype_version }}"
             ARGS="${ARGS}\nSYFT_VERSION=${{ steps.versions.outputs.syft_version }}"
@@ -204,6 +212,8 @@ jobs:
             ARGS="${ARGS}\nTRUFFLEHOG_VERSION=${{ steps.versions.outputs.trufflehog_version }}"
             ARGS="${ARGS}\nDOCKLE_VERSION=${{ steps.versions.outputs.dockle_version }}"
             ARGS="${ARGS}\nCYCLONEDX_CLI_VERSION=${{ steps.versions.outputs.cyclonedx_cli_version }}"
+            ARGS="${ARGS}\nCOSIGN_VERSION=${{ steps.versions.outputs.cosign_version }}"
+            ARGS="${ARGS}\nORAS_VERSION=${{ steps.versions.outputs.oras_version }}"
           fi
           # Use multiline output
           {
