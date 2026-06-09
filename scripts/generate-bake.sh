@@ -40,6 +40,13 @@ while IFS='=' read -r key value; do
     SECURITY_TOOLS["$key"]="$value"
 done < <(jq -r '.security_tools | to_entries[] | "\(.key)=\(.value)"' "$VERSIONS_FILE")
 
+# Read evidence_tools versions (cosign, oras): the scanner image signs the
+# image digest, the deploy image verifies the signature before deploying.
+declare -A EVIDENCE_TOOLS
+while IFS='=' read -r key value; do
+    EVIDENCE_TOOLS["$key"]="$value"
+done < <(jq -r '.evidence_tools | to_entries[] | "\(.key)=\(.value)"' "$VERSIONS_FILE")
+
 # Collect all target names for the default group
 ALL_TARGETS=()
 
@@ -100,6 +107,8 @@ XARGS
     TRUFFLEHOG_VERSION      = "${SECURITY_TOOLS[trufflehog]}"
     DOCKLE_VERSION          = "${SECURITY_TOOLS[dockle]}"
     CYCLONEDX_CLI_VERSION   = "${SECURITY_TOOLS[cyclonedx_cli]}"
+    COSIGN_VERSION          = "${EVIDENCE_TOOLS[cosign]}"
+    ORAS_VERSION            = "${EVIDENCE_TOOLS[oras]}"
 XARGS
 )
             elif [[ "$stack" == "deploy" ]]; then
@@ -107,6 +116,8 @@ XARGS
     HELM_VERSION            = "${DEPLOY_TOOLS[helm]}"
     KUBECTL_VERSION         = "${DEPLOY_TOOLS[kubectl]}"
     ARGOCD_VERSION          = "${DEPLOY_TOOLS[argocd]}"
+    COSIGN_VERSION          = "${EVIDENCE_TOOLS[cosign]}"
+    ORAS_VERSION            = "${EVIDENCE_TOOLS[oras]}"
 XARGS
 )
             fi

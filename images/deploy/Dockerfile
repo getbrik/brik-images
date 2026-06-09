@@ -1,15 +1,17 @@
 # brik-runner-deploy - Deploy tools for Brik CI/CD pipelines
-# Includes: docker compose, ssh, rsync, helm, kubectl, argocd CLI
+# Includes: docker compose, ssh, rsync, helm, kubectl, argocd CLI, cosign, oras
 # hadolint ignore=DL3007
 FROM ghcr.io/getbrik/brik-runner-base:latest
 
 ARG HELM_VERSION
 ARG KUBECTL_VERSION
 ARG ARGOCD_VERSION
+ARG COSIGN_VERSION
+ARG ORAS_VERSION
 
 LABEL org.opencontainers.image.source="https://github.com/getbrik/brik-images"
 LABEL org.opencontainers.image.title="brik-runner-deploy"
-LABEL org.opencontainers.image.description="Brik CI runner with deploy tools (compose, ssh, rsync, helm, kubectl, argocd)"
+LABEL org.opencontainers.image.description="Brik CI runner with deploy tools (compose, ssh, rsync, helm, kubectl, argocd, cosign, oras)"
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
@@ -38,6 +40,14 @@ RUN ARCH="$(uname -m)" \
        "https://github.com/argoproj/argo-cd/releases/download/${ARGOCD_VERSION}/argocd-linux-${ARCH_GO}" \
     && chmod +x /usr/local/bin/argocd
 
+# Evidence tools (cosign, oras): verify the image signature/attestation before
+# deploying (fail-closed CD preflight) and read the referrer graph.
+ENV COSIGN_VERSION=${COSIGN_VERSION} \
+    ORAS_VERSION=${ORAS_VERSION}
+
+COPY scripts/install-evidence-tools.sh /tmp/install-evidence-tools.sh
+RUN chmod +x /tmp/install-evidence-tools.sh && /tmp/install-evidence-tools.sh && rm /tmp/install-evidence-tools.sh
+
 # Verify all deploy tools
 # hadolint ignore=DL3001
 RUN docker compose version \
@@ -45,4 +55,6 @@ RUN docker compose version \
     && rsync --version \
     && helm version --short \
     && kubectl version --client \
-    && argocd version --client
+    && argocd version --client \
+    && cosign version \
+    && oras version
