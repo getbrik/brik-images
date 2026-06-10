@@ -34,7 +34,7 @@
     "base": {
       "versions": ["3.23"],
       "image_template": "alpine:${VERSION}",
-      "verify_cmd": "bash --version"
+      "verify_cmd": "bash --version && command -v ssh-keygen"
     },
     "node": {
       "versions": ["22", "24"],
@@ -70,7 +70,7 @@
     "scanner": {
       "versions": ["1"],
       "image_template": "alpine:3.23",
-      "verify_cmd": "grype version && syft version && osv-scanner --version && hadolint --version && gitleaks version && trufflehog --version && dockle --version && cosign version && oras version"
+      "verify_cmd": "grype version && syft version && osv-scanner --version && hadolint --version && gitleaks version && trufflehog --version && dockle --version && cosign version && oras version && command -v ssh-keygen"
     },
     "deploy": {
       "versions": ["1"],
