@@ -37,7 +37,9 @@ LABEL org.opencontainers.image.description="Brik CI runner base image with bash,
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
-RUN apk add --no-cache bash git curl ca-certificates
+# openssh-keygen ships ssh-keygen alone (no client/server): base verifies
+# ssh-signed evidence commits on the state repo (init/notify read-back).
+RUN apk add --no-cache bash git curl ca-certificates openssh-keygen
 
 # glow is not packaged in Alpine main/community (only edge/testing,
 # which is too volatile for a pinned base image). Install the upstream
@@ -72,4 +74,4 @@ COPY --from=jv-builder /jv /usr/local/bin/jv
 RUN echo "brik-runner" > /.brik-runner
 
 # Verify prerequisites
-RUN yq --version && jq --version && jv --version && git --version && bash --version && glow --version
+RUN yq --version && jq --version && jv --version && git --version && bash --version && glow --version && command -v ssh-keygen

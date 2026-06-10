@@ -24,8 +24,9 @@ LABEL org.opencontainers.image.description="Brik CI runner with scanning tools (
 LABEL org.opencontainers.image.vendor="getbrik"
 LABEL org.opencontainers.image.licenses="MIT"
 
-# Base dependencies (no Python, no Ruby)
-RUN apk add --no-cache bash git curl ca-certificates \
+# Base dependencies (no Python, no Ruby). openssh-keygen ships ssh-keygen
+# alone: container-scan signs evidence commits on the state repo.
+RUN apk add --no-cache bash git curl ca-certificates openssh-keygen \
     && rm -rf /var/cache/apk/*
 
 # cyclonedx-cli (.NET self-contained on amd64) needs invariant globalization
@@ -55,7 +56,7 @@ COPY scripts/install-scanner-tools.sh /tmp/install-scanner-tools.sh
 RUN chmod +x /tmp/install-scanner-tools.sh && /tmp/install-scanner-tools.sh \
     && rm -rf /tmp/* /var/cache/apk/* \
     && echo "brik-runner-scanner" > /.brik-runner \
-    && yq --version && jq --version && git --version && bash --version \
+    && yq --version && jq --version && git --version && bash --version && command -v ssh-keygen \
     && grype version \
     && syft version \
     && osv-scanner --version \
