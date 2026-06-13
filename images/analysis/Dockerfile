@@ -39,6 +39,11 @@ RUN mkdir -p /installed-bin \
          cp "/usr/bin/$f" /installed-bin/; \
        done
 
+# Stage the Python site-packages at a fixed, version-agnostic path. The Alpine
+# Python minor version moves with the base image (3.12 on Alpine 3.23, 3.14 on
+# 3.24), so the final stage must not hardcode it.
+RUN cp -a "$(ls -d /usr/lib/python3.*/site-packages | head -1)" /opt/py-site-packages
+
 # ---------------------------------------------------------------------------
 # Stage 2: final - runtime only (no dev deps, no build-base)
 # ---------------------------------------------------------------------------
@@ -81,8 +86,10 @@ ENV YQ_VERSION=${YQ_VERSION} \
 COPY scripts/install-brik-prereqs.sh /tmp/install-brik-prereqs.sh
 RUN chmod +x /tmp/install-brik-prereqs.sh && /tmp/install-brik-prereqs.sh && rm /tmp/install-brik-prereqs.sh
 
-# Copy Python site-packages from builder
-COPY --from=builder /usr/lib/python3.12/site-packages /usr/lib/python3.12/site-packages
+# Python site-packages from the builder, staged at a fixed path and exposed via
+# PYTHONPATH so this stays correct across Alpine Python version bumps.
+COPY --from=builder /opt/py-site-packages /opt/py-site-packages
+ENV PYTHONPATH=/opt/py-site-packages
 # Copy all pip/gem entry-point scripts added during install
 COPY --from=builder /installed-bin/ /usr/bin/
 
