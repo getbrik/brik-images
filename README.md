@@ -176,72 +176,61 @@ ghcr.io/getbrik/brik-runner-node:22@sha256:...    # digest pin (most secure)
 
 ## Usage
 
+You do not pick the image by hand, and you do not install `brik` into it. The `init` job
+reads `project.stack` and `project.stack_version` from your `brik.yml` and resolves each
+stage to the matching `ghcr.io/getbrik/brik-runner-<stack>:<version>`; the shared library
+clones the Brik runtime into the container at job start.
+
 ### GitLab CI
+
+Include the Brik template. That is the whole pipeline:
 
 ```yaml
 # .gitlab-ci.yml
-variables:
-  # Pin by digest for reproducible builds: ghcr.io/getbrik/brik-runner-node:22@sha256:...
-  BRIK_CI_IMAGE: "ghcr.io/getbrik/brik-runner-node:22"
-
 include:
   - project: 'brik/gitlab-templates'
     ref: v0.7.0
     file: '/templates/brik-integrate.yml'
 ```
 
-Or override the image on a single job. Here one job uses a custom image from your own registry (for example a brik runner extended with in-house tooling), instead of the public `node:22` pipeline default set above:
-
-```yaml
-e2e-tests:
-  image: registry.example.com/acme/brik-runner-node-e2e:1.4.0  # built FROM ghcr.io/getbrik/brik-runner-node, plus your test tooling
-  script:
-    - brik stage test
-```
+With `project.stack: node` and `stack_version: "22"` in `brik.yml`, the stage jobs run on
+`ghcr.io/getbrik/brik-runner-node:22`; the scan, analysis and deploy stages run on their
+dedicated images automatically.
 
 ### Jenkins
 
+Load the Brik shared library and call the orchestrator. Same automatic image resolution
+from `brik.yml`:
+
 ```groovy
-pipeline {
-    agent {
-        docker {
-            // Pin by digest for reproducible builds:
-            // image 'ghcr.io/getbrik/brik-runner-java:21@sha256:...'
-            image 'ghcr.io/getbrik/brik-runner-java:21'
-        }
-    }
-    stages {
-        stage('Build') {
-            steps {
-                sh 'brik stage build'
-            }
-        }
-    }
-}
+// Jenkinsfile
+@Library('brik') _
+brikIntegrate()
 ```
 
-### GitHub Actions
+### Using your own images (mirror, private registry, custom runners)
+
+Each runner class maps to an image in a runner-class map. To pull from a mirror, an
+air-gapped registry, or your own runners extended with in-house tooling, point Brik at an
+alternate map with the `BRIK_RUNNER_CLASSES_FILE` pipeline variable (a CI variable on
+GitLab, a build parameter on Jenkins) instead of editing your CI file:
 
 ```yaml
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    container:
-      # Pin by digest for reproducible builds:
-      # image: ghcr.io/getbrik/brik-runner-node:22@sha256:...
-      image: ghcr.io/getbrik/brik-runner-node:22
-    steps:
-      - uses: actions/checkout@v4
-      - run: brik stage build
+# my-runner-classes.yml, committed in your repo
+classes:
+  base:     { image: registry.example.com/acme/brik-runner-base,     tag: "1.4.0" }
+  scanner:  { image: registry.example.com/acme/brik-runner-scanner,  tag: "1.4.0" }
+  analysis: { image: registry.example.com/acme/brik-runner-analysis, tag: "1.4.0" }
+  deploy:   { image: registry.example.com/acme/brik-runner-deploy,   tag: "1.4.0" }
+  stack:    { image_env: BRIK_CI_IMAGE }   # stack image stays resolved from brik.yml
 ```
 
-### Local development
+Then set `BRIK_RUNNER_CLASSES_FILE=my-runner-classes.yml` for the pipeline.
 
-```bash
-docker run --rm -v "$(pwd):/workspace" -w /workspace \
-  ghcr.io/getbrik/brik-runner-node:22 \
-  brik stage build
-```
+> [!NOTE]
+> GitHub Actions and zero-config local runs (`docker run ... brik ...`) are not supported
+> yet: Brik ships GitLab and Jenkins adapters today, and the runtime is cloned by those
+> adapters rather than baked into the image. See the [Roadmap](#roadmap).
 
 ## Building locally
 
