@@ -190,13 +190,13 @@ include:
     file: '/templates/brik-integrate.yml'
 ```
 
-Or override per-job:
+Or override the image on a single job. Here one job pins a newer Node than the `node:22` pipeline default set above:
 
 ```yaml
-build:
-  image: ghcr.io/getbrik/brik-runner-node:22  # or :22@sha256:... for digest pin
+e2e-tests:
+  image: ghcr.io/getbrik/brik-runner-node:24  # or :24@sha256:... for a digest pin
   script:
-    - brik stage build
+    - brik stage test
 ```
 
 ### Jenkins
