@@ -208,6 +208,15 @@ from `brik.yml`:
 brikIntegrate()
 ```
 
+### Local
+
+With the Brik CLI installed on your host, run the flow straight from your project directory. Brik drives the same containerized engine as CI, spawning one brik-runner container per stage (the image is resolved from your `brik.yml`):
+
+```bash
+brik integrate      # full CI flow locally, one container per stage
+brik stage build    # or run a single stage in its runner image
+```
+
 ### Using your own images (mirror, private registry, custom runners)
 
 Each runner class maps to an image in a runner-class map. To pull from a mirror, an
@@ -228,9 +237,7 @@ classes:
 Then set `BRIK_RUNNER_CLASSES_FILE=my-runner-classes.yml` for the pipeline.
 
 > [!NOTE]
-> GitHub Actions and zero-config local runs (`docker run ... brik ...`) are not supported
-> yet: Brik ships GitLab and Jenkins adapters today, and the runtime is cloned by those
-> adapters rather than baked into the image. See the [Roadmap](#roadmap).
+> Native pipeline templates exist for GitLab and Jenkins. The same containerized engine also runs on any host with Docker, including a CI runner with no native Brik adapter such as GitHub Actions: install the CLI and call `brik integrate`. The only thing still on the [Roadmap](#roadmap) is the zero-config form, `docker run <brik-runner-image> brik ...`, with Brik baked into the image so no host install is needed.
 
 ## Building locally
 
@@ -307,7 +314,7 @@ All tool and stack versions are defined in `versions.json` (single source of tru
 
 ## Roadmap
 
-The Brik runtime is currently cloned at CI time by the shared library's `before_script`, keeping image releases decoupled from Brik development. Once Brik reaches a stable release cadence, the runtime will be pre-installed in the images. That will unlock zero-config local usage (`docker run ghcr.io/getbrik/brik-runner-node:22 brik stage build`) and fully offline pipelines.
+The Brik runtime is currently cloned at run time (by the GitLab and Jenkins adapters, and by the local engine) rather than baked into the image, keeping image releases decoupled from Brik development. So today you run Brik with the CLI installed on your host (see [Local](#local)). Once Brik reaches a stable release cadence, the runtime will be pre-installed in the images, unlocking zero-config use with no host install (`docker run ghcr.io/getbrik/brik-runner-node:22 brik stage build`) and fully offline pipelines.
 
 ## License
 
