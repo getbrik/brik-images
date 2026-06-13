@@ -190,11 +190,11 @@ include:
     file: '/templates/brik-integrate.yml'
 ```
 
-Or override the image on a single job. Here one job pins a newer Node than the `node:22` pipeline default set above:
+Or override the image on a single job. Here one job uses a custom image from your own registry (for example a brik runner extended with in-house tooling), instead of the public `node:22` pipeline default set above:
 
 ```yaml
 e2e-tests:
-  image: ghcr.io/getbrik/brik-runner-node:24  # or :24@sha256:... for a digest pin
+  image: registry.example.com/acme/brik-runner-node-e2e:1.4.0  # built FROM ghcr.io/getbrik/brik-runner-node, plus your test tooling
   script:
     - brik stage test
 ```
