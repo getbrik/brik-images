@@ -478,12 +478,114 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Scan with Grype
+        if: github.event_name != 'pull_request'
+        id: grype
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
+        with:
+          image: "${{ env.REGISTRY }}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+          fail-build: true
+          severity-cutoff: critical
+          only-fixed: true
+
+      - name: Upload Grype SARIF to GitHub Security
+        if: github.event_name != 'pull_request' && always()
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+        with:
+          sarif_file: ${{ steps.grype.outputs.sarif }}
+          category: grype-${{ matrix.stack }}-${{ matrix.version }}
+
+      - name: Generate security badge data
+        if: github.event_name != 'pull_request' && always()
+        run: |
+          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+
+          # scan-action installs grype in hostedtoolcache but does not persist PATH
+          export PATH="/opt/hostedtoolcache/grype/$(ls /opt/hostedtoolcache/grype/ 2>/dev/null | head -1)/x64:${PATH}"
+
+          # Image is already in Docker daemon (pulled by scan-action)
+          # Full scan (not only-fixed) for transparency in badges
+          grype "docker:${IMAGE}" -o json > /tmp/grype-full.json 2>/tmp/grype-err.log || true
+          if [ -s /tmp/grype-err.log ]; then cat /tmp/grype-err.log; fi
+
+          if [ ! -s /tmp/grype-full.json ] || ! jq -e '.matches' /tmp/grype-full.json >/dev/null 2>&1; then
+            echo "::warning::Grype scan produced no valid results, using zero counts"
+            CRITICAL=0; HIGH=0; MEDIUM=0; LOW=0
+          else
+            CRITICAL=$(jq '[.matches[] | select(.vulnerability.severity == "Critical")] | length' /tmp/grype-full.json)
+            HIGH=$(jq '[.matches[] | select(.vulnerability.severity == "High")] | length' /tmp/grype-full.json)
+            MEDIUM=$(jq '[.matches[] | select(.vulnerability.severity == "Medium")] | length' /tmp/grype-full.json)
+            LOW=$(jq '[.matches[] | select(.vulnerability.severity == "Low")] | length' /tmp/grype-full.json)
+          fi
+
+          echo "CVE counts: Critical=$CRITICAL High=$HIGH Medium=$MEDIUM Low=$LOW"
+
+          if [ "$CRITICAL" -gt 0 ]; then COLOR="critical"
+          elif [ "$HIGH" -gt 0 ]; then COLOR="important"
+          elif [ "$MEDIUM" -gt 0 ]; then COLOR="yellow"
+          else COLOR="brightgreen"; fi
+
+          mkdir -p badges
+          jq -n --arg label "CVEs" \
+                --arg message "${CRITICAL}C | ${HIGH}H | ${MEDIUM}M | ${LOW}L" \
+                --arg color "$COLOR" \
+                '{schemaVersion:1, label:$label, message:$message, color:$color}' \
+            > "badges/${{ matrix.stack }}-${{ matrix.version }}.json"
+
+      - name: Upload badge data
+        if: github.event_name != 'pull_request' && always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: badge-${{ matrix.stack }}-${{ matrix.version }}
+          path: badges/
+
+      - name: Generate SBOM with Syft
+        if: github.event_name != 'pull_request'
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          image: "${{ env.REGISTRY }}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+          format: cyclonedx-json
+          output-file: sbom-${{ matrix.stack }}-${{ matrix.version }}.json
+
+      - name: Upload SBOM
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sbom-${{ matrix.stack }}-${{ matrix.version }}
+          path: sbom-${{ matrix.stack }}-${{ matrix.version }}.json
+
       - name: Smoke test
         if: github.event_name == 'pull_request'
         run: |
           IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
           echo "Testing ${IMAGE}"
           docker run --rm "${IMAGE}" bash -c '${{ matrix.verify_cmd }}'
+
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign image
+        if: github.event_name != 'pull_request'
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+          cosign sign --yes "${IMAGE}"
+
+      - name: Attest SBOM
+        if: github.event_name != 'pull_request'
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          IMAGE="${REGISTRY}/brik-runner-${{ matrix.stack }}:${{ matrix.version }}"
+          # 409 Conflict is expected when the same attestation already exists in the transparency log
+          cosign attest --yes --predicate sbom-${{ matrix.stack }}-${{ matrix.version }}.json --type cyclonedx "${IMAGE}" || {
+            rc=$?
+            if [ $rc -ne 0 ]; then
+              echo "::warning::cosign attest exited with code $rc (409 conflict = attestation already exists, safe to ignore)"
+            fi
+          }
 
       - name: Attest build provenance
         if: github.event_name != 'pull_request'
