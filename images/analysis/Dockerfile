@@ -42,7 +42,7 @@ RUN mkdir -p /installed-bin \
 # Stage the Python site-packages at a fixed, version-agnostic path. The Alpine
 # Python minor version moves with the base image (3.12 on Alpine 3.23, 3.14 on
 # 3.24), so the final stage must not hardcode it.
-RUN cp -a "$(ls -d /usr/lib/python3.*/site-packages | head -1)" /opt/py-site-packages
+RUN cp -a /usr/lib/python3.*/site-packages /opt/py-site-packages
 
 # ---------------------------------------------------------------------------
 # Stage 2: final - runtime only (no dev deps, no build-base)
