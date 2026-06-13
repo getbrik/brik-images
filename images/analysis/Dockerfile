@@ -5,7 +5,7 @@ ARG VERSION
 # ---------------------------------------------------------------------------
 # Stage 1: builder - install Python/Ruby tools with dev dependencies
 # ---------------------------------------------------------------------------
-FROM alpine:3.23 AS builder
+FROM alpine:3.24 AS builder
 
 RUN apk add --no-cache \
     bash \
@@ -42,7 +42,7 @@ RUN mkdir -p /installed-bin \
 # ---------------------------------------------------------------------------
 # Stage 2: final - runtime only (no dev deps, no build-base)
 # ---------------------------------------------------------------------------
-FROM alpine:3.23
+FROM alpine:3.24
 
 ARG VERSION
 ARG YQ_VERSION
