@@ -21,7 +21,7 @@ Stock language images (`node:24-slim`, `python:3.13-slim`) are great for develop
 - Every CI job re-installs the same `bash 5+`, `yq`, `jq`, `git`, `curl`. 30 to 40 seconds, every job, every pipeline.
 - No signature, no attestation, no SBOM. You take the maintainer's word for what is inside.
 - CVE patches lag. Stock images rebuild on the maintainer's cadence, not yours.
-- No CI-specific tooling. SAST, SCA, secret scanning, container linting -- you bring your own and install per job.
+- No CI-specific tooling. SAST, SCA, secret scanning, container linting: you bring your own and install per job.
 
 brik-images are CI runner images. Bootstrap is gone. Provenance is signed. CVE posture is published live, per image, on every push. Scanner and analysis tools come pre-installed in dedicated images.
 
@@ -48,10 +48,10 @@ Every build applies the base image's pending OS security updates (`apt-get upgra
 Every image contains:
 
 - **bash** (5.x)
-- **yq** -- YAML processor
-- **jq** -- JSON processor
-- **git** -- version control
-- **curl** -- HTTP client
+- **yq**: YAML processor
+- **jq**: JSON processor
+- **git**: version control
+- **curl**: HTTP client
 
 Stack images additionally include their respective toolchain (node/npm, python/pip, java/maven, rust/cargo, dotnet/sdk). Exact pinned versions of every bundled tool are in [`versions.json`](versions.json).
 
@@ -59,8 +59,8 @@ Stack images additionally include their respective toolchain (node/npm, python/p
 
 The scanning tooling is split into two images based on their runtime requirements:
 
-- **analysis** -- Python/Ruby runtime, for deep SAST analysis, license compliance, and IaC scanning.
-- **scanner** -- static Go binaries only, fast to pull, for vulnerability scanning, secret detection, Dockerfile linting, and container scanning.
+- **analysis**: Python/Ruby runtime, for deep SAST analysis, license compliance, and IaC scanning.
+- **scanner**: static Go binaries only, fast to pull, for vulnerability scanning, secret detection, Dockerfile linting, and container scanning.
 
 #### Analysis image (~1.7 GB)
 
@@ -122,7 +122,7 @@ All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
 Every image is scanned, signed, and continuously rebuilt:
 
-- ✅ Scanned with [Grype](https://github.com/anchore/grype) on every build. The build **hard-fails only on a Critical CVE that has an available upstream fix** -- Critical and High CVEs that upstream has not patched yet are recorded, not blocked.
+- ✅ Scanned with [Grype](https://github.com/anchore/grype) on every build. The build **hard-fails only on a Critical CVE that has an available upstream fix**. Critical and High CVEs that upstream has not patched yet are recorded, not blocked.
 - ✅ Scan results uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full per-image visibility.
 - ✅ SBOMs generated with [Syft](https://github.com/anchore/syft) in CycloneDX format.
 - ✅ Images signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC).
@@ -131,18 +131,18 @@ Every image is scanned, signed, and continuously rebuilt:
 ### Current CVE posture
 
 > [!IMPORTANT]
-> **These images are not CVE-free.** They bundle the latest upstream base images (`node:*-slim`, `python:*-slim`, Debian, Alpine), and those carry vulnerabilities their maintainers have not patched yet. Several stack images currently show **Critical** CVEs, and every non-base image shows dozens of **High** -- the per-image badge in the [Available images](#available-images) table is the live count, and the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) the per-CVE detail. Treat those, not this prose, as the source of truth.
+> **These images are not CVE-free.** They bundle the latest upstream base images (`node:*-slim`, `python:*-slim`, Debian, Alpine), and those carry vulnerabilities their maintainers have not patched yet. Several stack images currently show **Critical** CVEs, and every non-base image shows dozens of **High**. The per-image badge in the [Available images](#available-images) table is the live count, and the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) the per-CVE detail. Treat those, not this prose, as the source of truth.
 
 **What we control:** the bundled tools (`yq`, `jq`, `git`, and the scanner/analysis binaries) are pinned to current releases and bumped regularly; the build blocks on a Critical that has a fix.
 
-**What we don't control:** CVEs in the language runtimes themselves and in statically-linked Go binaries -- those clear only when the runtime or tool upstream ships a patched release. For production use, pin images by digest and run a scan gate against your own risk policy.
+**What we don't control:** CVEs in the language runtimes themselves and in statically-linked Go binaries; those clear only when the runtime or tool upstream ships a patched release. For production use, pin images by digest and run a scan gate against your own risk policy.
 
 ### Suppressed CVEs
 
 > [!IMPORTANT]
 > A few CVEs are suppressed in [`.grype.yaml`](.grype.yaml) so the build can stay green: Go-toolchain vulnerabilities compiled into statically-linked scanner binaries (`dockle`, `gitleaks`, `osv-scanner`) that we cannot remediate without forking the upstream project. [`.grype.yaml`](.grype.yaml) is the canonical list.
 
-The **live status** -- the per-tool breakdown, and whether a patched upstream release is available yet -- is the auto-refreshed [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review), regenerated every Monday by [`scripts/review-cve-suppressions.sh`](scripts/review-cve-suppressions.sh). When a tool ships a release on a patched Go, bump it in [`versions.json`](versions.json) and drop its entry from `.grype.yaml` and [`.cve-suppressions.json`](.cve-suppressions.json).
+The **live status** (the per-tool breakdown, and whether a patched upstream release is available yet) is the auto-refreshed [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review), regenerated every Monday by [`scripts/review-cve-suppressions.sh`](scripts/review-cve-suppressions.sh). When a tool ships a release on a patched Go, bump it in [`versions.json`](versions.json) and drop its entry from `.grype.yaml` and [`.cve-suppressions.json`](.cve-suppressions.json).
 
 ### Verifying
 
@@ -314,7 +314,7 @@ All tool and stack versions are defined in `versions.json` (single source of tru
 
 1. Edit `versions.json`
 2. Run `./scripts/generate-bake.sh` (or use `--regenerate` with `build-local.sh`)
-3. Commit and push -- CI handles the rest
+3. Commit and push; CI handles the rest
 
 ## Roadmap
 
