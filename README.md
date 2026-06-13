@@ -83,7 +83,20 @@ The scanning tooling is split into two images based on their runtime requirement
 | trufflehog | Secret scanning (entropy + patterns) |
 | dockle | Docker image best-practice linting |
 
-**Note**: the Brik runtime itself is NOT pre-installed. It is cloned at CI time by the shared library's `before_script`. This decouples image releases from Brik releases.
+> [!NOTE]
+> The Brik runtime itself is NOT pre-installed. It is cloned at CI time by the shared library's `before_script`. This decouples image releases from Brik releases.
+
+### Deploy image
+
+`brik-runner-deploy` (FROM base) carries the CD toolchain used by the deploy-class runner in Brik's CD flow. It adds cosign and oras on top of the deploy tools so the flow can verify the signed attestation on the resolved digest before deploying.
+
+| Tool | Purpose |
+|------|---------|
+| helm | Kubernetes package manager |
+| kubectl | Kubernetes CLI |
+| argocd | GitOps CD controller CLI |
+| cosign | Verify image signatures and attestations |
+| oras | OCI artifact transport (evidence) |
 
 ## Available images
 
@@ -101,6 +114,7 @@ The scanning tooling is split into two images based on their runtime requirement
 | `brik-runner-dotnet` | `10.0` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/dotnet-10.0.json) | `docker pull ghcr.io/getbrik/brik-runner-dotnet:10.0` |
 | `brik-runner-analysis` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/analysis-1.json) | `docker pull ghcr.io/getbrik/brik-runner-analysis` |
 | `brik-runner-scanner` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/scanner-1.json) | `docker pull ghcr.io/getbrik/brik-runner-scanner` |
+| `brik-runner-deploy` | `1` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/deploy-1.json) | `docker pull ghcr.io/getbrik/brik-runner-deploy` |
 
 All images are multi-arch: `linux/amd64` and `linux/arm64`.
 
@@ -116,15 +130,17 @@ Every image is scanned, signed, and continuously rebuilt:
 
 ### Current CVE posture
 
-**These images are not CVE-free.** They bundle the latest upstream base images (`node:*-slim`, `python:*-slim`, Debian, Alpine), and those carry vulnerabilities their maintainers have not patched yet. Several stack images currently show **Critical** CVEs, and every non-base image shows dozens of **High** -- the per-image badge in the [Available images](#available-images) table is the live count, and the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) the per-CVE detail. Treat those, not this prose, as the source of truth.
+> [!IMPORTANT]
+> **These images are not CVE-free.** They bundle the latest upstream base images (`node:*-slim`, `python:*-slim`, Debian, Alpine), and those carry vulnerabilities their maintainers have not patched yet. Several stack images currently show **Critical** CVEs, and every non-base image shows dozens of **High** -- the per-image badge in the [Available images](#available-images) table is the live count, and the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) the per-CVE detail. Treat those, not this prose, as the source of truth.
 
 **What we control:** the bundled tools (`yq`, `jq`, `git`, and the scanner/analysis binaries) are pinned to current releases and bumped regularly; the build blocks on a Critical that has a fix.
 
 **What we don't control:** CVEs in the language runtimes themselves and in statically-linked Go binaries -- those clear only when the runtime or tool upstream ships a patched release. For production use, pin images by digest and run a scan gate against your own risk policy.
 
-### Suppressed CVEs (read this)
+### Suppressed CVEs
 
-A few CVEs are suppressed in [`.grype.yaml`](.grype.yaml) so the build can stay green: Go-toolchain vulnerabilities compiled into statically-linked scanner binaries (`dockle`, `gitleaks`, `osv-scanner`) that we cannot remediate without forking the upstream project. [`.grype.yaml`](.grype.yaml) is the canonical list.
+> [!IMPORTANT]
+> A few CVEs are suppressed in [`.grype.yaml`](.grype.yaml) so the build can stay green: Go-toolchain vulnerabilities compiled into statically-linked scanner binaries (`dockle`, `gitleaks`, `osv-scanner`) that we cannot remediate without forking the upstream project. [`.grype.yaml`](.grype.yaml) is the canonical list.
 
 The **live status** -- the per-tool breakdown, and whether a patched upstream release is available yet -- is the auto-refreshed [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review), regenerated every Monday by [`scripts/review-cve-suppressions.sh`](scripts/review-cve-suppressions.sh). When a tool ships a release on a patched Go, bump it in [`versions.json`](versions.json) and drop its entry from `.grype.yaml` and [`.cve-suppressions.json`](.cve-suppressions.json).
 
@@ -155,7 +171,8 @@ ghcr.io/getbrik/brik-runner-node:sha-a1b2c3d      # immutable git SHA
 ghcr.io/getbrik/brik-runner-node:22@sha256:...    # digest pin (most secure)
 ```
 
-**For production pipelines**, pin images by digest (`@sha256:...`) to guarantee reproducible builds. Mutable tags like `:22` or `:latest` can change on rebuilds. Use `docker inspect --format='{{index .RepoDigests 0}}' <image>` to retrieve the current digest.
+> [!IMPORTANT]
+> **For production pipelines**, pin images by digest (`@sha256:...`) to guarantee reproducible builds. Mutable tags like `:22` or `:latest` can change on rebuilds. Use `docker inspect --format='{{index .RepoDigests 0}}' <image>` to retrieve the current digest.
 
 ## Usage
 
@@ -169,8 +186,8 @@ variables:
 
 include:
   - project: 'brik/gitlab-templates'
-    ref: v1
-    file: '/templates/pipeline.yml'
+    ref: v0.7.0
+    file: '/templates/brik-integrate.yml'
 ```
 
 Or override per-job:
@@ -179,7 +196,7 @@ Or override per-job:
 build:
   image: ghcr.io/getbrik/brik-runner-node:22  # or :22@sha256:... for digest pin
   script:
-    - brik run stage build
+    - brik stage build
 ```
 
 ### Jenkins
@@ -196,7 +213,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                sh 'brik run stage build'
+                sh 'brik stage build'
             }
         }
     }
@@ -215,7 +232,7 @@ jobs:
       image: ghcr.io/getbrik/brik-runner-node:22
     steps:
       - uses: actions/checkout@v4
-      - run: brik run stage build
+      - run: brik stage build
 ```
 
 ### Local development
@@ -223,7 +240,7 @@ jobs:
 ```bash
 docker run --rm -v "$(pwd):/workspace" -w /workspace \
   ghcr.io/getbrik/brik-runner-node:22 \
-  brik run stage build
+  brik stage build
 ```
 
 ## Building locally
@@ -301,7 +318,7 @@ All tool and stack versions are defined in `versions.json` (single source of tru
 
 ## Roadmap
 
-The Brik runtime is currently cloned at CI time by the shared library's `before_script`, keeping image releases decoupled from Brik development. Once Brik reaches a stable release cadence, the runtime will be pre-installed in the images. That will unlock zero-config local usage (`docker run ghcr.io/getbrik/brik-runner-node:22 brik run stage build`) and fully offline pipelines.
+The Brik runtime is currently cloned at CI time by the shared library's `before_script`, keeping image releases decoupled from Brik development. Once Brik reaches a stable release cadence, the runtime will be pre-installed in the images. That will unlock zero-config local usage (`docker run ghcr.io/getbrik/brik-runner-node:22 brik stage build`) and fully offline pipelines.
 
 ## License
 
