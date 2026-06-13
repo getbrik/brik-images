@@ -32,7 +32,7 @@
   },
   "stacks": {
     "base": {
-      "versions": ["3.23"],
+      "versions": ["3.24"],
       "image_template": "alpine:${VERSION}",
       "verify_cmd": "bash --version && command -v ssh-keygen"
     },
@@ -64,12 +64,12 @@
     },
     "analysis": {
       "versions": ["1"],
-      "image_template": "alpine:3.23",
+      "image_template": "alpine:3.24",
       "verify_cmd": "semgrep --version && checkov --version && license_finder version && scancode --version"
     },
     "scanner": {
       "versions": ["1"],
-      "image_template": "alpine:3.23",
+      "image_template": "alpine:3.24",
       "verify_cmd": "grype version && syft version && osv-scanner --version && hadolint --version && gitleaks version && trufflehog --version && dockle --version && cosign version && oras version && command -v ssh-keygen"
     },
     "deploy": {

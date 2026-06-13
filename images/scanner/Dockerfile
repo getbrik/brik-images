@@ -2,7 +2,7 @@
 # Contains: grype, syft, osv-scanner, hadolint, gitleaks, trufflehog, dockle,
 #           cyclonedx-cli, cosign, oras
 ARG VERSION
-FROM alpine:3.23
+FROM alpine:3.24
 
 ARG YQ_VERSION
 ARG JQ_VERSION
