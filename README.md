@@ -37,7 +37,7 @@ Live CVE counts in the [Available images](#available-images) table, not a static
 
 ### 🔄 Continuously rebuilt
 
-Every build applies the base image's pending OS security updates (`apt-get upgrade`). Weekly rebuilds refresh base images. [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates. Suppressed CVEs are reviewed every Monday by an automated [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review) so nothing rots silently.
+Every build applies the base image's pending OS security updates (`apt-get upgrade`). Weekly rebuilds refresh base images. [Dependabot](https://github.com/dependabot/dependabot-core) auto-merges digest updates. Suppressed CVEs are reviewed every Monday by an automated [CVE Suppression Review issue](https://github.com/getbrik/brik-images/issues?q=is%3Aissue+label%3Acve-suppression-review) so nothing rots silently.
 
 ### 🧱 Built for Brik
 
@@ -102,7 +102,7 @@ The scanning tooling is split into two images based on their runtime requirement
 
 | Image | Version | Security | Pull command |
 |-------|---------|----------|--------------|
-| `brik-runner-base` | `3.23` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/base-3.23.json) | `docker pull ghcr.io/getbrik/brik-runner-base` |
+| `brik-runner-base` | `3.24` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/base-3.24.json) | `docker pull ghcr.io/getbrik/brik-runner-base` |
 | `brik-runner-node` | `22` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/node-22.json) | `docker pull ghcr.io/getbrik/brik-runner-node:22` |
 | `brik-runner-node` | `24` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/node-24.json) | `docker pull ghcr.io/getbrik/brik-runner-node:24` |
 | `brik-runner-python` | `3.13` | ![CVEs](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/getbrik/brik-images/main/docs/badges/python-3.13.json) | `docker pull ghcr.io/getbrik/brik-runner-python:3.13` |
@@ -126,7 +126,7 @@ Every image is scanned, signed, and continuously rebuilt:
 - ✅ Scan results uploaded to the [Security tab](https://github.com/getbrik/brik-images/security/code-scanning) for full per-image visibility.
 - ✅ SBOMs generated with [Syft](https://github.com/anchore/syft) in CycloneDX format.
 - ✅ Images signed with [cosign](https://github.com/sigstore/cosign) (keyless, OIDC).
-- ✅ Every build applies the base image's pending OS security updates; weekly rebuilds refresh the base images; [Renovate](https://github.com/renovatebot/renovate) auto-merges digest updates.
+- ✅ Every build applies the base image's pending OS security updates; weekly rebuilds refresh the base images; [Dependabot](https://github.com/dependabot/dependabot-core) auto-merges digest updates.
 
 ### Current CVE posture
 
