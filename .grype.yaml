@@ -57,12 +57,6 @@ ignore:
   # Python point release backports the fix.
   - vulnerability: CVE-2026-7210
 
-  # github.com/moby/buildkit < 0.28.1 (CVE-2026-33747): a malicious build
-  # frontend can escape the storage root. Statically linked into
-  # docker-buildx v0.34.1 (latest). Remove once buildx bundles buildkit
-  # >= 0.28.1.
-  - vulnerability: GO-2026-4858   # CVE-2026-33747
-
   # Go stdlib CVEs in upstream scanner/deploy binaries compiled with an
   # older Go. Already listed above by CVE id, but Grype's go-module matcher
   # also reports them under their GO-* id on statically linked binaries,
