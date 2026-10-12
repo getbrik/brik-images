@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "label": "CVEs",
-  "message": "0C | 50H | 102M | 24L",
-  "color": "important"
+  "message": "6C | 74H | 106M | 33L",
+  "color": "critical"
 }
