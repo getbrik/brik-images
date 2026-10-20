@@ -13,7 +13,7 @@ ARG JV_VERSION
 # v0.7.0 is the latest published cmd/jv tag and pulls in
 # jsonschema/v6 v6.0.1 transitively.
 # ---------------------------------------------------------------------------
-FROM golang:1.26-alpine AS jv-builder
+FROM golang:1.27-alpine AS jv-builder
 ARG JV_VERSION
 ENV CGO_ENABLED=0
 RUN apk add --no-cache git \
